@@ -4,10 +4,6 @@ c **********************************************************
 C CALCULATE RELATIVISTIC CORE-VALENCE-VALENCE AUGER SPECTRA
 c **********************************************************
 c
-c Preliminary: non-relativistic version by G. Hoermandinger 1988-1989
-c
-c written by L. Szunyogh  Oct 1991
-c
       implicit real*8 (a-h,o-z)
 c
       parameter (nemax=500,nemax2=1000,n1m=300,nemf=15,nemf2=30)

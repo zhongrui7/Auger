@@ -2,14 +2,10 @@
 ##################################################################
 ## ##
 ## Program for the calculation of the correlated two holes ##
-## Green's function for a CVV Auger transition from a CuO_2 ##
-## plane ##
-
+## Green's function for a CVV Auger transition  ##
 ## ##
 ##################################################################
 ##################################################################
-# Latest Revision on 26 June 2008
-# Refactoring on october, 12 2008.
 # Everything is packed in classes to achieve better usability and
 # performances.
 # Import of the modules needed for the computations

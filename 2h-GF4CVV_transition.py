@@ -8,8 +8,7 @@
 ##################################################################
 # Everything is packed in classes to achieve better usability and
 # performances.
-# Import of the modules needed for the computations
-# and the GUI
+# Import of the modules needed for the computations and the GUI
 from __future__ import division
 from numpy import matrix
 from math import cos

@@ -4,8 +4,7 @@
 ## Program for the calculation of the correlated two holes ##
 ## Green's function for a CVV Auger transition from a CuO_2 ##
 ## plane ##
-## ##
-## Authors: Dr. Simona Ugenti and Dr. Francesco Guerrieri ##
+
 ## ##
 ##################################################################
 ##################################################################

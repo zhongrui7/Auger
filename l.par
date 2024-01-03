@@ -1,0 +1,4 @@
+      parameter (lvmax=2)
+      parameter (lcore=2)
+      parameter (lmax=lcore+2*lvmax+2)
+      parameter (lmax2=2*lmax)

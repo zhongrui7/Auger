@@ -287,7 +287,6 @@
 !         ***************************************
 !         * loop for the energy in valence band *
 !         ***************************************
-!
                   DO nei = 1 , ne
                      neip = nei2 + 1 - nei
                      IF ( irange(nei,nei2)/=0 ) THEN
@@ -564,8 +563,8 @@
 99015 FORMAT (7D13.5)
 !
 99999 END PROGRAM rcvvmat
+!
 !*==WAFU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE wafu(En,Rl,Rlb,Rj,V,Rs,X0,Dx,Rmt,Nmt,Rws,Nws,P,Q,Norm,Nval,Nonrel,Pun,Lval,Coef,Kout)
 !================================================
 !
@@ -738,8 +737,8 @@ SUBROUTINE wafu(En,Rl,Rlb,Rj,V,Rs,X0,Dx,Rmt,Nmt,Rws,Nws,P,Q,Norm,Nval,Nonrel,Pun
 99007 FORMAT (15x,11D13.5)
 !
 END SUBROUTINE wafu
+!
 !*==COMDIR.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE comdir(E1,Kappa,Za,Nrc,Nnk,Dx,X0,Q,P,Ratfg,Nonrel)
 !======================================================================
 !
@@ -930,8 +929,8 @@ SUBROUTINE comdir(E1,Kappa,Za,Nrc,Nnk,Dx,X0,Q,P,Ratfg,Nonrel)
    ENDDO SPAG_DispatchLoop_1
 !
 END SUBROUTINE comdir
+!
 !*==CEI.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE cei(F2,F4,F1,F3,R,N,Lambda,L2,L4,L1,L3,Dx,Rws,Result)
 ! ====================================================================
    IMPLICIT NONE
@@ -996,8 +995,8 @@ SUBROUTINE cei(F2,F4,F1,F3,R,N,Lambda,L2,L4,L1,L3,Dx,Rws,Result)
    Result = sintg(ll,arg2,R,Dx,m)
 !
 END SUBROUTINE cei
+!
 !*==SINTG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION sintg(Ll,Fct,R,Dx,N)
 ! ========================================
 !
@@ -1038,8 +1037,8 @@ DOUBLE PRECISION FUNCTION sintg(Ll,Fct,R,Dx,N)
    sintg = sum/3.D0
    IF ( mod(N,2)==0 ) sintg = sintg + (Fct(N)+Fct(N-1))/2.D0*(R(N)-R(N-1))
 END FUNCTION sintg
+!
 !*==DINTG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE dintg(Ll,Idir,Fct,Yint,R,Dx,N,Rws)
 ! =================================================
 !
@@ -1104,8 +1103,8 @@ SUBROUTINE dintg(Ll,Idir,Fct,Yint,R,Dx,N,Rws)
 !
    ENDIF
 END SUBROUTINE dintg
+!
 !*==INTER1.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE inter1(R,P,N,Id,Rs,Ps)
 ! =====================================
    IMPLICIT NONE
@@ -1130,11 +1129,10 @@ SUBROUTINE inter1(R,P,N,Id,Rs,Ps)
       Ps = Ps + term*P(j)/denom
    ENDDO
 END SUBROUTINE inter1
+!
 !*==SBF.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE sbf(E,R,Fb,Fn)
 ! =============================
-!
 ! spherical bessel and neuman functions for            e > 0
 ! modified spherical bessel and neuman functions for   e < 0
 !
@@ -1183,8 +1181,8 @@ SUBROUTINE sbf(E,R,Fb,Fn)
    ENDDO
 !
 END SUBROUTINE sbf
+!
 !*==SBF1.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE sbf1(E,R,Fb,Fn)
 ! =============================
 !
@@ -1245,8 +1243,8 @@ SUBROUTINE sbf1(E,R,Fb,Fn)
    ENDIF
 !
 END SUBROUTINE sbf1
+!
 !*==WIG3J.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE wig3j(W3j,Pun)
 ! ===================================
 !
@@ -1341,8 +1339,8 @@ SUBROUTINE wig3j(W3j,Pun)
    ENDDO
 !
 END SUBROUTINE wig3j
+!
 !*==WIG6J.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE wig6j(W6j,J1,Pun)
 ! ================================
 !
@@ -1441,8 +1439,8 @@ SUBROUTINE wig6j(W6j,J1,Pun)
    ENDDO
 !
 END SUBROUTINE wig6j
+!
 !*==REC3JJ.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
 ! =====================================================================
 !
@@ -1808,8 +1806,8 @@ SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
    ENDDO SPAG_DispatchLoop_1
 !
 END SUBROUTINE rec3jj
+!
 !*==REC6J.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
 ! ===================================================================
 !

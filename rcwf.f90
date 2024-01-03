@@ -361,8 +361,8 @@ PROGRAM rcore
 99001 FORMAT (a80)
 99006 FORMAT (5I4)
 END PROGRAM rcore
+!
 !*==APWIN.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE apwin
 !
 !     ******************************
@@ -492,8 +492,8 @@ SUBROUTINE apwin
    RETURN
 99002 FORMAT (2F10.5,i4)
 END SUBROUTINE apwin
+!
 !*==CPAIN.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE cpain
 !
 !     ****************************************************************
@@ -615,9 +615,8 @@ SUBROUTINE cpain
    RETURN
 99002 FORMAT (2F10.5,i4)
 END SUBROUTINE cpain
+!
 !*==FPOT.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
- 
 FUNCTION fpot(R,Z,Wa)
 !
 !     *************************************************
@@ -636,8 +635,8 @@ FUNCTION fpot(R,Z,Wa)
    wc = (Z+Wa)*(wd/we)**2 - Wa
    fpot = -wc/R
 END FUNCTION fpot
+!
 !*==INOUH.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE inouh(Dp,Dq,Dr,Dq1,Dfl,Dv,Z,Test,Nuc,Nstop,Jc)
 !
 !     ****************************************
@@ -751,8 +750,8 @@ CONTAINS
       ENDDO
    END SUBROUTINE spag_block_1
 END SUBROUTINE inouh
+!
 !*==INSLD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE insld(Natom)
 !
 !     ************************************
@@ -908,8 +907,8 @@ SUBROUTINE insld(Natom)
 !
    RETURN
 END SUBROUTINE insld
+!
 !*==INTH.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE inth(Dp,Dq,Dv,Dr)
 !
 !     *****************************************************
@@ -952,8 +951,8 @@ SUBROUTINE inth(Dp,Dq,Dv,Dr)
    Deq(5) = Dk*Dq - dsum*Dp
 !
 END SUBROUTINE inth
+!
 !*==KKRIN.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE kkrin
 !
 !     ******************************************************************
@@ -1095,8 +1094,8 @@ SUBROUTINE kkrin
 99002 FORMAT (f11.6,f9.5,4I4)
 99003 FORMAT (4I4,3F11.7)
 END SUBROUTINE kkrin
+!
 !*==POISAT.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE poisat(Natom)
 !
 !     ***************************************
@@ -1232,8 +1231,8 @@ SUBROUTINE poisat(Natom)
 99001 FORMAT (10x,'iteration ',i4,' delta V-max ',e15.8)
 !
 END SUBROUTINE poisat
+!
 !*==RESLD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE resld(Nqn,Nql,Nk,Imax,De,Dfl,Dq1,Jc,Natom)
 !
 !     *************************
@@ -1562,8 +1561,8 @@ SUBROUTINE resld(Nqn,Nql,Nk,Imax,De,Dfl,Dq1,Jc,Natom)
       END SELECT
    ENDDO SPAG_DispatchLoop_1
 END SUBROUTINE resld
+!
 !*==TOTEC.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE totec(Natom)
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -1745,8 +1744,8 @@ SUBROUTINE totec(Natom)
       END SELECT
    ENDDO SPAG_DispatchLoop_1
 END SUBROUTINE totec
+!
 !*==RSIMP.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 FUNCTION rsimp(F,R,Rn,Irn)
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -1792,8 +1791,8 @@ FUNCTION rsimp(F,R,Rn,Irn)
    rsimp = s
    RETURN
 END FUNCTION rsimp
+!
 !*==RSIMP3.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 FUNCTION rsimp3(F,R,Rn,Jrn)
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -1848,8 +1847,8 @@ FUNCTION rsimp3(F,R,Rn,Jrn)
 !
    rsimp3 = val
 END FUNCTION rsimp3
+!
 !*==FITRAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE fitrad(Np)
 !
 !     ******************************************************************
@@ -1935,8 +1934,8 @@ SUBROUTINE fitrad(Np)
    ENDDO
 !
 END SUBROUTINE fitrad
+!
 !*==MIKE.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE mike(Ilat)
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -1996,8 +1995,8 @@ SUBROUTINE mike(Ilat)
 !
    RETURN
 END SUBROUTINE mike
+!
 !*==INTERP.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE interp(R,P,N,Rs,Ps,Dps,Deriv)
 !
 !     ****************************

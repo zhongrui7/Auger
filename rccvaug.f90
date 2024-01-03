@@ -1,10 +1,7 @@
 PROGRAM rccvaug
 !
 ! calculate relativistic core-core-valence spectrum
-!
 !     subroutines needed: ccvopen,synspec,broad
-!
-!
 !
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -222,8 +219,8 @@ PROGRAM rccvaug
 99005 FORMAT (10A1)
 99011 FORMAT (f11.5,8E13.5)
 END PROGRAM rccvaug
+
 !*==CCVOPEN.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE ccvopen(Dos,Mat,Tty,Prt,Plot)
    IMPLICIT NONE
 !
@@ -266,8 +263,8 @@ SUBROUTINE ccvopen(Dos,Mat,Tty,Prt,Plot)
 !
 99001 FORMAT (a40)
 END SUBROUTINE ccvopen
+
 !*==SYNSPEC.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE synspec(E0,Pdos,Ne0,Maxd,Pspect,Stot,Em0,Pmat,Nem0,Maxm,Ldim,Lmax,Prt,Ipr)
 !
 !     put together xps-spectrum on dos mesh
@@ -320,8 +317,8 @@ SUBROUTINE synspec(E0,Pdos,Ne0,Maxd,Pspect,Stot,Em0,Pmat,Nem0,Maxm,Ldim,Lmax,Prt
    RETURN
 !
 END SUBROUTINE synspec
+
 !*==YLAG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION ylag(Xi,X,Y,Ind1,N1,Imax,Iex)
 !
 !     program authors a.a.brooks and e.c.long,
@@ -419,8 +416,8 @@ CONTAINS
       RETURN
    END SUBROUTINE spag_block_6
 END FUNCTION ylag
+
 !*==BROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE broad(E0,A0,N0,Max,Mine1,Prt,Hwc,Hwv,Hws,E1,A1,Ai,N1,Ef,Cfac,Snorm)
 !
 !     interpolate to plot-grid and convolute with lorentzian
@@ -541,8 +538,8 @@ SUBROUTINE broad(E0,A0,N0,Max,Mine1,Prt,Hwc,Hwv,Hws,E1,A1,Ai,N1,Ef,Cfac,Snorm)
    ENDDO
 !
 END SUBROUTINE broad
+!
 !*==CONVLO.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
 !
    IMPLICIT NONE
@@ -563,8 +560,9 @@ DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
    ENDDO
    convlo = sum/Pi
 END FUNCTION convlo
-!*==CONVGAU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
+!
+! *==CONVGAU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
+!
 DOUBLE PRECISION FUNCTION convgau(A1,Ind,Gc,Ah,Estep,Ngc,N1)
 !
    IMPLICIT NONE

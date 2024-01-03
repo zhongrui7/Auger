@@ -105,8 +105,6 @@ PROGRAM rccvaug
 !
 !
 ! ***************  read in densities of states  ***************
-!
-!
    READ (dos,99005) (iddos(j),j=1,10)
    READ (dos,*)
    READ (dos,*) ef
@@ -317,7 +315,7 @@ SUBROUTINE synspec(E0,Pdos,Ne0,Maxd,Pspect,Stot,Em0,Pmat,Nem0,Maxm,Ldim,Lmax,Prt
    RETURN
 !
 END SUBROUTINE synspec
-
+!
 !*==YLAG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
 DOUBLE PRECISION FUNCTION ylag(Xi,X,Y,Ind1,N1,Imax,Iex)
 !
@@ -366,11 +364,13 @@ DOUBLE PRECISION FUNCTION ylag(Xi,X,Y,Ind1,N1,Imax,Iex)
    Iex = 1
    CALL spag_block_3
    RETURN
+!
 CONTAINS
    SUBROUTINE spag_block_1
       ind = j
       CALL spag_block_2
    END SUBROUTINE spag_block_1
+ !
    SUBROUTINE spag_block_2
       IF ( ind<=1 ) Iex = -1
       inl = ind - (n+1)/2
@@ -382,11 +382,13 @@ CONTAINS
       ENDIF
       CALL spag_block_3
    END SUBROUTINE spag_block_2
+!
    SUBROUTINE spag_block_3
       inl = Imax - n + 1
       inu = Imax
       CALL spag_block_4
    END SUBROUTINE spag_block_3
+!
    SUBROUTINE spag_block_4
       s = 0.D0
       p = 1.D0
@@ -407,16 +409,18 @@ CONTAINS
       ylag = s*p
       CALL spag_block_5
    END SUBROUTINE spag_block_4
+!   
    SUBROUTINE spag_block_5
       RETURN
    END SUBROUTINE spag_block_5
+!   
    SUBROUTINE spag_block_6
       ylag = Y(j)
       CALL spag_block_5
       RETURN
    END SUBROUTINE spag_block_6
 END FUNCTION ylag
-
+!
 !*==BROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
 SUBROUTINE broad(E0,A0,N0,Max,Mine1,Prt,Hwc,Hwv,Hws,E1,A1,Ai,N1,Ef,Cfac,Snorm)
 !
@@ -562,7 +566,6 @@ DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
 END FUNCTION convlo
 !
 ! *==CONVGAU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!
 DOUBLE PRECISION FUNCTION convgau(A1,Ind,Gc,Ah,Estep,Ngc,N1)
 !
    IMPLICIT NONE
@@ -587,6 +590,7 @@ DOUBLE PRECISION FUNCTION convgau(A1,Ind,Gc,Ah,Estep,Ngc,N1)
       Ah(i) = A1(imx)*Gc(i)
    ENDDO
    CALL spag_block_1
+!
 CONTAINS
    SUBROUTINE spag_block_1
       DO i = -1 , -Ngc , -1
@@ -599,6 +603,7 @@ CONTAINS
       ENDDO
       CALL spag_block_2
    END SUBROUTINE spag_block_1
+!
    SUBROUTINE spag_block_2
       sum = 0.D0
       DO i = -Ngc , Ngc

@@ -435,8 +435,8 @@ PROGRAM rcvvaug
 99007 FORMAT (4x,'e2',5x,5x,'Total',3x,4(5x,i2,1x,i2,3x),5x,'Diag.')
 99008 FORMAT (f11.5,6E13.5)
 END PROGRAM rcvvaug
+!
 !*==DOSBROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE dosbroad(Ef,Nef,E,Udos,Hwlr,Dos,Lmax)
 ! ====================================================
    IMPLICIT NONE
@@ -488,8 +488,8 @@ SUBROUTINE dosbroad(Ef,Nef,E,Udos,Hwlr,Dos,Lmax)
 !
    WRITE (6,*) ' Out of dosbroad'
 END SUBROUTINE dosbroad
+!
 !*==BROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE broad(Ein,A0,N0,Max0,Mine1,E1,A1,Ai,N1m,N1,Snorm,Smax,Hws,Hwl,Hwc,U)
 ! ==============================================================
 !
@@ -655,8 +655,8 @@ SUBROUTINE broad(Ein,A0,N0,Max0,Mine1,E1,A1,Ai,N1m,N1,Snorm,Smax,Hws,Hwl,Hwc,U)
       END SELECT
    ENDDO SPAG_DispatchLoop_1
 END SUBROUTINE broad
+!
 !*==CONVLO.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
 ! ==================================================================
    IMPLICIT NONE
@@ -678,8 +678,8 @@ DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
    convlo = sum/Pi
    WRITE (6,*) ' Out of convlo'
 END FUNCTION convlo
+!
 !*==CONVGAU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION convgau(A1,Ind,Gc,Ah,Estep,Ngc,N1)
 ! ================================================================
    IMPLICIT NONE
@@ -728,8 +728,8 @@ CONTAINS
       WRITE (6,*) ' Out of convgau'
    END SUBROUTINE spag_block_2
 END FUNCTION convgau
+!
 !*==MATINTER.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE matinter(Crsfile,Efile,Nume,Efile2,Nume2,Nemf,Nemf2,Km,Irange,E2,Emin,Emax,E,Nemax,Crs,Ifst,Ilast,Idoc,Jprt)
 ! ========================================================
 !
@@ -908,8 +908,8 @@ SUBROUTINE matinter(Crsfile,Efile,Nume,Efile2,Nume2,Nemf,Nemf2,Km,Irange,E2,Emin
    ENDIF
    WRITE (6,*) ' out of matinter'
 END SUBROUTINE matinter
+!
 !*==LAGRANGE.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE lagrange(X,Y,Ndim,Npkt,Xval,Yinter,Iextra)
 ! =========================================================
    IMPLICIT NONE
@@ -929,7 +929,7 @@ SUBROUTINE lagrange(X,Y,Ndim,Npkt,Xval,Yinter,Iextra)
    IF ( Xval<X(1) ) Iextra = -1
    IF ( Xval>X(Ndim) ) Iextra = 1
 !
-! Suche 1. Punkt rechts von xval, falls es ihn gibt:
+! Find 1st point to the right of xval if it exists::
    igr = 0
    SPAG_Loop_1_1: DO
       igr = igr + 1
@@ -939,7 +939,7 @@ SUBROUTINE lagrange(X,Y,Ndim,Npkt,Xval,Yinter,Iextra)
       ENDIF
       IF ( X(igr)>=Xval .OR. igr>=Ndim ) THEN
 !
-! Bestimme 1. Punkt f. Interpolation
+! Determine 1st point f. interpolation
          ileft = Npkt/2
          IF ( mod(Npkt,2)/=0 ) ileft = ileft + 1
          ifst = igr - ileft
@@ -947,16 +947,16 @@ SUBROUTINE lagrange(X,Y,Ndim,Npkt,Xval,Yinter,Iextra)
          IF ( ifst<=0 ) ifst = 1
          IF ( ifst>Ndim-Npkt+1 ) ifst = Ndim - Npkt + 1
 !
-! Lasst uns interpolieren:
+! Let's interpolate:
          CALL inter(X(ifst),Y(ifst),Npkt,Xval,Yinter)
-! Und das war's dann auch schon, Leute!
+! And that's about it, folks!
          WRITE (6,*) ' Out of Lagrange'
          EXIT SPAG_Loop_1_1
       ENDIF
    ENDDO SPAG_Loop_1_1
 END SUBROUTINE lagrange
+!
 !*==INTER.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE inter(R,P,N,Rs,Ps)
 ! =================================
    IMPLICIT NONE
@@ -983,8 +983,8 @@ SUBROUTINE inter(R,P,N,Rs,Ps)
    ENDDO
    WRITE (6,*) ' Out of inter'
 END SUBROUTINE inter
+!
 !*==LEFTIND.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 INTEGER FUNCTION leftind(Field,Ndim,Value)
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -1003,14 +1003,15 @@ INTEGER FUNCTION leftind(Field,Ndim,Value)
       ENDIF
    ENDDO
    CALL spag_block_1
+!
 CONTAINS
    SUBROUTINE spag_block_1
       leftind = i
       IF ( leftind<1 ) leftind = 1
    END SUBROUTINE spag_block_1
 END FUNCTION leftind
+!
 !*==IRIGHT.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 INTEGER FUNCTION iright(Field,Ndim,Value)
    IMPLICIT NONE
 !*** Start of declarations inserted by SPAG
@@ -1029,14 +1030,15 @@ INTEGER FUNCTION iright(Field,Ndim,Value)
       ENDIF
    ENDDO
    CALL spag_block_1
+!
 CONTAINS
    SUBROUTINE spag_block_1
       iright = i
       IF ( iright>Ndim ) iright = Ndim
    END SUBROUTINE spag_block_1
 END FUNCTION iright
+!
 !*==SIMPSON.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION simpson(Fct,N,Dx)
 ! ===============================================
    IMPLICIT NONE
@@ -1059,8 +1061,8 @@ DOUBLE PRECISION FUNCTION simpson(Fct,N,Dx)
    simpson = sum/3.
    IF ( mod(N,2)==0 ) simpson = simpson + (Fct(N)+Fct(N-1))*Dx/2.
 END FUNCTION simpson
+!
 !*==ORDER.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE order(F,N,Ior)
 ! =============================
    IMPLICIT NONE

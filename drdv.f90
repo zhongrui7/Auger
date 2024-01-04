@@ -1,5 +1,3 @@
-!*==DVDR.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE dvdr(R,Rv,Z,Nmt,R2dvdr)
 !     ===============
 !
@@ -35,8 +33,8 @@ SUBROUTINE dvdr(R,Rv,Z,Nmt,R2dvdr)
       R2dvdr(i) = 0.D0
    ENDDO
 END SUBROUTINE dvdr
+!
 !*==DERSPL.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE derspl(N,X,F,D,A)
 !     =================
 !

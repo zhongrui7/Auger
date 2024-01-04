@@ -1,5 +1,3 @@
-!*==CEI.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE cei(F2,F4,F1,F3,R,N,Lambda,L2,L4,L1,L3,Dx,Rws,Result)
 ! ====================================================================
    IMPLICIT NONE
@@ -64,8 +62,8 @@ SUBROUTINE cei(F2,F4,F1,F3,R,N,Lambda,L2,L4,L1,L3,Dx,Rws,Result)
    Result = sintg(ll,arg2,R,Dx,m)
 !
 END SUBROUTINE cei
+!
 !*==SINTG.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 DOUBLE PRECISION FUNCTION sintg(Ll,Fct,R,Dx,N)
 ! ========================================
 !
@@ -106,8 +104,8 @@ DOUBLE PRECISION FUNCTION sintg(Ll,Fct,R,Dx,N)
    sintg = sum/3.D0
    IF ( mod(N,2)==0 ) sintg = sintg + (Fct(N)+Fct(N-1))/2.D0*(R(N)-R(N-1))
 END FUNCTION sintg
+!
 !*==DINTG.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE dintg(Ll,Idir,Fct,Yint,R,Dx,N,Rws)
 ! =================================================
 !
@@ -172,8 +170,8 @@ SUBROUTINE dintg(Ll,Idir,Fct,Yint,R,Dx,N,Rws)
 !
    ENDIF
 END SUBROUTINE dintg
+!
 !*==INTER1.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-!!SPAG Open source Personal, Educational or Academic User  NON-COMMERCIAL USE - Not for use on proprietary or closed source code
 SUBROUTINE inter1(R,P,N,Id,Rs,Ps)
 ! =====================================
    IMPLICIT NONE

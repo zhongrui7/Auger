@@ -1,39 +1,48 @@
-PROGRAM rcvvaug
+program rcvvaug
 !
 ! **********************************************************
 ! CALCULATE RELATIVISTIC CORE-VALENCE-VALENCE AUGER SPECTRA
 ! **********************************************************
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a0 , bla , conv , crs , crsfile , de , de2 , dos , dum , dummy , e , e0 , e1 , e1ryd , e2 , e2max , e2maxev , e2min ,    &
-        & ecore , ee
-   REAL*8 eep , ef , efac , efile , efile2 , emax , emin , energy , et0 , fl , fl1 , fl2 , hwc , hwlev , hwlf , hwlr , hws , p ,   &
-        & p1 , p1diag
-   REAL*8 p1tot , pdiag , pdiagg , phelp , pi , pmax , psum , psumma , psumtot , ptot , ptott , simpson , smax , snorm , tiny , u ,&
-        & udos , y , z
-   INTEGER i , idoc , ie2 , ifst , ii , ikap , ikapp , ilast , iminb , in , iord , ip , irange , iright , j , jdos , jj , jmat ,   &
-         & jp , jprt
-   INTEGER jspect , k , kap , kapp , KM , KMTOT , kp , krel , ktest , ktot , l , leftind , lmax , maxd , n1 , N1M , ne , ne2 ,     &
-         & necount , nef
-   INTEGER NEMAX , NEMAX2 , NEMF , NEMF2 , nume , nume2 , nval
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
 !
-   PARAMETER (NEMAX=500,NEMAX2=1000,N1M=300,NEMF=15,NEMF2=30)
-   PARAMETER (KM=3,KMTOT=28)
+! PARAMETER definitions rewritten by SPAG
 !
-   CHARACTER name*50 , title*78 , namorb*10 , filen*50
+   integer , parameter :: NEMAX = 500 , NEMAX2 = 1000 , N1M = 300 , NEMF = 15 , NEMF2 = 30 , KM = 3 , KMTOT = 28
 !
-   DIMENSION e1(N1M) , e(NEMAX) , efile(NEMF) , efile2(NEMF2) , e2(NEMAX2) , irange(NEMF,NEMF2)
-   DIMENSION z(-KM-1:KM) , udos(NEMAX,-KM-1:KM) , dos(NEMAX,-KM-1:KM)
-   DIMENSION crsfile(NEMF,NEMF2,-KM-1:KM,-KM-1:KM) , crs(NEMAX,-KM-1:KM,-KM-1:KM)
-   DIMENSION p(NEMAX2,KMTOT) , psum(KMTOT)
-   DIMENSION pdiag(NEMAX2) , ptot(NEMAX2)
-   DIMENSION iord(KMTOT) , ikap(KMTOT) , ikapp(KMTOT)
-   DIMENSION y(NEMAX) , phelp(N1M)
-   DIMENSION p1(N1M,4) , p1tot(N1M) , p1diag(N1M)
+! Local variable declarations rewritten by SPAG
 !
-   DATA pi/3.1415926536/ , efac/13.606/ , tiny/1.0D-5/
+   real(REAL64) :: A0 , BLA , CONV , DE , DE2 , DUM , DUMMY , E0 , E1RYD , E2MAX , E2MAXEV , E2MIN , ECORE , EE , EEP , EF , EMAX ,&
+                 & EMIN , ENERGY , ET0 , FL , FL1 , FL2 , HWC , HWLEV , HWLF , HWLR , HWS , PDIAGG , PMAX , PSUMMA , PSUMTOT ,     &
+                 & PTOTT , SMAX , SNORM , U
+   real(REAL64) , dimension(nemax,-km-1:km,-km-1:km) :: CRS
+   real(REAL64) , dimension(nemf,nemf2,-km-1:km,-km-1:km) :: CRSFILE
+   real(REAL64) , dimension(nemax,-km-1:km) :: DOS , UDOS
+   real(REAL64) , dimension(nemax) :: E , Y
+   real(REAL64) , dimension(n1m) :: E1 , P1DIAG , P1TOT , PHELP
+   real(REAL64) , dimension(nemax2) :: E2 , PDIAG , PTOT
+   real(REAL64) , save :: EFAC , PI , TINY
+   real(REAL64) , dimension(nemf) :: EFILE
+   real(REAL64) , dimension(nemf2) :: EFILE2
+   character(50) :: FILEN , NAME
+   integer :: I , IDOC , IE2 , IFST , II , ILAST , IMINB , IN , IP , J , JDOS , JJ , JMAT , JP , JPRT , JSPECT , K , KAP , KAPP ,  &
+            & KP , KREL , KTEST , KTOT , L , LMAX , MAXD , N1 , NE , NE2 , NECOUNT , NEF , NUME , NUME2 , NVAL
+   integer , dimension(kmtot) :: IKAP , IKAPP , IORD
+   integer , dimension(nemf,nemf2) :: IRANGE
+   integer , external :: IRIGHT , LEFTIND
+   character(10) :: NAMORB
+   real(REAL64) , dimension(nemax2,kmtot) :: P
+   real(REAL64) , dimension(n1m,4) :: P1
+   real(REAL64) , dimension(kmtot) :: PSUM
+   real(REAL64) , external :: SIMPSON
+   character(78) :: TITLE
+   real(REAL64) , dimension(-km-1:km) :: Z
+   external BROAD , DOSBROAD , MATINTER , ORDER
+!
+! End of declarations rewritten by SPAG
+!
+   data pi/3.1415926536/ , efac/13.606/ , tiny/1.0D-5/
 !
 !
 !  open i/o files  *****************
@@ -44,168 +53,168 @@ PROGRAM rcvvaug
    jprt = 7
    jspect = 8
 !
-   OPEN (UNIT=in,FILE='rcvvaug.in')
+   open (unit=in,file='rcvvaug.in')
 !
 ! dos file
 !
-   READ (in,99001) filen
-   WRITE (*,99001) filen
-   OPEN (UNIT=jdos,FILE=filen)
+   read (in,99001) filen
+   write (*,99001) filen
+   open (unit=jdos,file=filen)
 !
 !
 ! matrix element file
 !
-   READ (in,99001) filen
-   WRITE (*,99001) filen
-   OPEN (UNIT=jmat,FILE=filen)
+   read (in,99001) filen
+   write (*,99001) filen
+   open (unit=jmat,file=filen)
 !
 !
 ! print file
 !
-   READ (in,99001) filen
-   WRITE (*,99001) filen
-   OPEN (UNIT=jprt,FILE=filen)
+   read (in,99001) filen
+   write (*,99001) filen
+   open (unit=jprt,file=filen)
 !
 !
 ! spectrum file
 !
-   READ (in,99001) filen
-   WRITE (*,99001) filen
-   OPEN (UNIT=jspect,FILE=filen)
+   read (in,99001) filen
+   write (*,99001) filen
+   open (unit=jspect,file=filen)
 !
 ! ******************************
 !
 !
-   READ (in,99002) title
-   WRITE (*,99002) title
+   read (in,99002) title
+   write (*,99002) title
 !
 ! spectrometer resolution (fwhm in eV)
 !
-   READ (in,*) hws
-   WRITE (*,*) hws
+   read (in,*) hws
+   write (*,*) hws
 !
 !
 ! valence band lifetime broadening (fwhm in eV)
 ! (DOS will be broadened before convolution,
 !  i.e. valence band holes are considered to be independent)
 !
-   READ (in,*) hwlev
-   WRITE (*,*) hwlev
+   read (in,*) hwlev
+   write (*,*) hwlev
    hwlr = hwlev/efac
 !
 !
 ! core hole lifetime broadening (fwhm in eV)
 !
-   READ (in,*) hwc
-   WRITE (*,*) hwc
+   read (in,*) hwc
+   write (*,*) hwc
 !
 !
 ! two-hole final state lifetime broadening (fwhm in eV)
 !
-   READ (in,*) hwlf
-   WRITE (*,*) hwlf
+   read (in,*) hwlf
+   write (*,*) hwlf
 !
 !
 ! relativistic or nonrelativistic densities of states (1/0)
 !
-   READ (in,*) krel
-   WRITE (*,*) krel
+   read (in,*) krel
+   write (*,*) krel
 !
 !
 ! shift the unbroadened spectrum downwards
 !
-   READ (in,*) u
-   WRITE (*,*) u
+   read (in,*) u
+   write (*,*) u
 !
 !
 ! ***********  read in matrixelements ***************
 !
-   READ (jmat,*)
-   READ (jmat,99001) name
-   READ (jmat,*)
-   READ (jmat,99003) namorb
-   READ (jmat,*)
-   READ (jmat,*) ecore
-   READ (jmat,*)
-   READ (jmat,*) e0 , de , nume
-   READ (jmat,*)
-   READ (jmat,*) lmax
-   READ (jmat,*)
-   READ (jmat,*) a0
-   READ (jmat,*)
-   READ (jmat,*)
+   read (jmat,*)
+   read (jmat,99001) name
+   read (jmat,*)
+   read (jmat,99003) namorb
+   read (jmat,*)
+   read (jmat,*) ecore
+   read (jmat,*)
+   read (jmat,*) e0 , de , nume
+   read (jmat,*)
+   read (jmat,*) lmax
+   read (jmat,*)
+   read (jmat,*) a0
+   read (jmat,*)
+   read (jmat,*)
 !
-   WRITE (jprt,*) ' Matrixelements'
-   WRITE (jprt,99001) name
-   WRITE (jprt,99003) namorb
-   WRITE (jprt,99004) ((kap,kapp,kapp=-lmax-1,kap),kap=-lmax-1,-1) , ((kap,kapp,kapp=-lmax-1,-1),(kap,kapp,kapp=1,kap),kap=1,lmax)
-99004 FORMAT (/1x,'i2',2x,'i',3x,'e2',4x,'ep',4x,'e',2x,28(i6,i3,'    ')/)
+   write (jprt,*) ' Matrixelements'
+   write (jprt,99001) name
+   write (jprt,99003) namorb
+   write (jprt,99004) ((kap,kapp,kapp=-lmax-1,kap),kap=-lmax-1,-1) , ((kap,kapp,kapp=-lmax-1,-1),(kap,kapp,kapp=1,kap),kap=1,lmax)
+99004 format (/1x,'i2',2x,'i',3x,'e2',4x,'ep',4x,'e',2x,28(i6,i3,'    ')/)
 !
-   WRITE (jspect,99002) title
-   WRITE (jspect,99001) name
-   WRITE (jspect,99010) hws , hwlev , hwc , hwlf
-99010 FORMAT ('   HWS=',f5.2,' eV','    HWL=',f5.2,' eV','   HWC=',f5.2,' eV','   HWLF=',f5.2,' eV')
+   write (jspect,99002) title
+   write (jspect,99001) name
+   write (jspect,99010) hws , hwlev , hwc , hwlf
+99010 format ('   HWS=',f5.2,' eV','    HWL=',f5.2,' eV','   HWC=',f5.2,' eV','   HWLF=',f5.2,' eV')
 !
    conv = 2.0*pi/a0
    conv = conv*conv
-   IF ( krel==0 ) conv = 1.0
+   if ( krel==0 ) conv = 1.0
 !
    nume2 = 2*nume - 1
    necount = nume*nume
-   DO i = 1 , nume
+   do i = 1 , nume
       efile(i) = e0 + de*(i-1)
-   ENDDO
+   enddo
 !
    et0 = 2.0*e0 - ecore
-   DO i = 1 , nume2
+   do i = 1 , nume2
       efile2(i) = et0 + de*(i-1)
-      DO j = 1 , nume
+      do j = 1 , nume
          jp = i + 1 - j
          irange(j,i) = 1
-         IF ( jp<1 .OR. jp>nume ) THEN
+         if ( jp<1 .or. jp>nume ) then
             irange(j,i) = 0
-            CYCLE
-         ENDIF
+            cycle
+         endif
 !
-         READ (jmat,*) ii , jj , dum , eep , ee , ((crsfile(jj,ii,kap,kapp),kapp=-lmax-1,kap),kap=-lmax-1,-1) ,                    &
+         read (jmat,*) ii , jj , dum , eep , ee , ((crsfile(jj,ii,kap,kapp),kapp=-lmax-1,kap),kap=-lmax-1,-1) ,                    &
                      & ((crsfile(jj,ii,kap,kapp),kapp=-lmax-1,-1),(crsfile(jj,ii,kap,kapp),kapp=1,kap),kap=1,lmax)
 !
-         WRITE (jprt,99005) i , j , efile2(i) , efile(jp) , efile(j) , ((crsfile(j,i,kap,kapp),kapp=-lmax-1,kap),kap=-lmax-1,-1) , &
+         write (jprt,99005) i , j , efile2(i) , efile(jp) , efile(j) , ((crsfile(j,i,kap,kapp),kapp=-lmax-1,kap),kap=-lmax-1,-1) , &
                           & ((crsfile(j,i,kap,kapp),kapp=-lmax-1,-1),(crsfile(j,i,kap,kapp),kapp=1,kap),kap=1,lmax)
-99005    FORMAT (2I3,3F6.2,28D13.5)
+99005    format (2I3,3F6.2,28D13.5)
 !
-         IF ( ii/=i .OR. jj/=j .OR. dabs(eep-efile(jp))>tiny .OR. dabs(ee-efile(j))>tiny ) THEN
-            WRITE (6,*) i , j , efile(jp) , efile(j)
-            WRITE (6,*) ii , jj , eep , ee
-            STOP ' shit happened'
-         ENDIF
+         if ( ii/=i .or. jj/=j .or. dabs(eep-efile(jp))>tiny .or. dabs(ee-efile(j))>tiny ) then
+            write (6,*) i , j , efile(jp) , efile(j)
+            write (6,*) ii , jj , eep , ee
+            stop ' shit happened'
+         endif
 !
-      ENDDO
-   ENDDO
+      enddo
+   enddo
 !
 !
 !
 ! ***************  read in densities of states  ***************
 !
 !
-   READ (jdos,99001) name
-   READ (jdos,*)
-   READ (jdos,*) ef
+   read (jdos,99001) name
+   read (jdos,*)
+   read (jdos,*) ef
    ef = conv*ef
-   READ (jdos,*) lmax
-   READ (jdos,*) maxd
-   READ (jdos,*)
+   read (jdos,*) lmax
+   read (jdos,*) maxd
+   read (jdos,*)
 !
    ii = 0
-   DO i = 1 , maxd
+   do i = 1 , maxd
 !
-      IF ( krel==0 ) THEN
-         READ (jdos,*) energy , (z(l),l=0,lmax) , bla
-         IF ( bla>=tiny .OR. ii/=0 ) THEN
+      if ( krel==0 ) then
+         read (jdos,*) energy , (z(l),l=0,lmax) , bla
+         if ( bla>=tiny .or. ii/=0 ) then
             ii = ii + 1
             e(ii) = energy*conv
             udos(ii,-1) = z(0)
-            DO l = 1 , lmax
+            do l = 1 , lmax
                fl = dfloat(2*l+1)
                fl = fl + fl
                fl1 = dfloat(2*l)
@@ -214,62 +223,62 @@ PROGRAM rcvvaug
                fl2 = fl2/fl
                udos(ii,l) = z(l)*fl1
                udos(ii,-l-1) = z(l)*fl2
-            ENDDO
-         ENDIF
-      ELSE
-         READ (jdos,*) energy , bla , z(-1) , (z(l),z(-l-1),l=1,lmax)
-         IF ( bla>=tiny .OR. ii/=0 ) THEN
+            enddo
+         endif
+      else
+         read (jdos,*) energy , bla , z(-1) , (z(l),z(-l-1),l=1,lmax)
+         if ( bla>=tiny .or. ii/=0 ) then
             ii = ii + 1
             e(ii) = energy*conv
-            DO k = -lmax - 1 , lmax
+            do k = -lmax - 1 , lmax
                udos(ii,k) = z(k)
-            ENDDO
-         ENDIF
-      ENDIF
+            enddo
+         endif
+      endif
 !
-   ENDDO
+   enddo
    ne = ii
 !
-   WRITE (jprt,*)
-   WRITE (jprt,*) ' Densities of states'
-   DO i = 1 , ne
-      WRITE (jprt,99006) e(i) , udos(i,-1) , (udos(i,l),udos(i,-l-1),l=1,lmax)
-   ENDDO
+   write (jprt,*)
+   write (jprt,*) ' Densities of states'
+   do i = 1 , ne
+      write (jprt,99006) e(i) , udos(i,-1) , (udos(i,l),udos(i,-l-1),l=1,lmax)
+   enddo
 !
 !
    nef = iright(e,ne,ef)
 !
 ! check energy ranges:
-   IF ( e(1)<efile(1) .OR. e(nef)>efile(nume) ) THEN
-      WRITE (6,*) ' energy range of matrix elements must exceed' , ' that of DOS!'
-      STOP
-   ENDIF
+   if ( e(1)<efile(1) .or. e(nef)>efile(nume) ) then
+      write (6,*) ' energy range of matrix elements must exceed' , ' that of DOS!'
+      stop
+   endif
 !
 !
 !  life time broadening of DOS **********************
 !
-   CALL dosbroad(ef,nef,e,udos,hwlr,dos,lmax)
+   call dosbroad(ef,nef,e,udos,hwlr,dos,lmax)
 !
-   WRITE (jprt,*)
-   WRITE (jprt,*) ' Densities of states after broadening'
-   DO i = 1 , nef
-      WRITE (jprt,99006) e(i) , dos(i,-1) , (dos(i,l),dos(i,-l-1),l=1,lmax)
-   ENDDO
+   write (jprt,*)
+   write (jprt,*) ' Densities of states after broadening'
+   do i = 1 , nef
+      write (jprt,99006) e(i) , dos(i,-1) , (dos(i,l),dos(i,-l-1),l=1,lmax)
+   enddo
 !
    ii = 0
-   DO k = -lmax - 1 , lmax
-      IF ( k/=0 ) THEN
-         DO kp = -lmax - 1 , k
-            IF ( kp/=0 ) THEN
+   do k = -lmax - 1 , lmax
+      if ( k/=0 ) then
+         do kp = -lmax - 1 , k
+            if ( kp/=0 ) then
                ii = ii + 1
                ikap(ii) = k
                ikapp(ii) = kp
-            ENDIF
-         ENDDO
-      ENDIF
-   ENDDO
+            endif
+         enddo
+      endif
+   enddo
    ktot = ii
-   WRITE (6,*) ' ktot=' , ktot
+   write (6,*) ' ktot=' , ktot
 !
 ! determine boundaries for energy loop ***************
 !
@@ -280,12 +289,13 @@ PROGRAM rcvvaug
 ! set up final energy scale e2 (double grid has been set for array e2)
    de = e(2) - e(1)
    de2 = e(3) - e(1)
-   ne2 = iidint((e2max-e2min)/de2) + 1
+!      ne2=iidint((e2max-e2min)/de2)+1
+   ne2 = int((e2max-e2min)/de2) + 1
    ee = e2min - de2
-   DO i = 1 , ne2
+   do i = 1 , ne2
       ee = ee + de2
       e2(i) = ee
-   ENDDO
+   enddo
 !
 ! index values for test output of matrix elements:
    ktest = ne2/6
@@ -293,8 +303,8 @@ PROGRAM rcvvaug
 !
 ! start loop over final energies *********************
 !
-   DO ie2 = 1 , ne2
-      WRITE (6,*) ie2 , (e2(ie2)+e1ryd)/2.
+   do ie2 = 1 , ne2
+      write (6,*) ie2 , (e2(ie2)+e1ryd)/2.
 !
 ! valence band energy boundaries for this final energy:
       emax = dmin1(e1ryd+e2(ie2)-e(1),e(nef))
@@ -309,11 +319,11 @@ PROGRAM rcvvaug
 !
 ! documentation:
       idoc = 0
-      IF ( mod(ie2,ktest)==0 ) idoc = 1
-      IF ( ie2==1 .OR. ie2==2 ) idoc = 1
-      IF ( ie2==ne2-1 .OR. ie2==ne2 ) idoc = 1
+      if ( mod(ie2,ktest)==0 ) idoc = 1
+      if ( ie2==1 .or. ie2==2 ) idoc = 1
+      if ( ie2==ne2-1 .or. ie2==ne2 ) idoc = 1
 !
-      CALL matinter(crsfile,efile,nume,efile2,nume2,NEMF,NEMF2,lmax,irange,e2(ie2),emin,emax,e,NEMAX,crs,ifst,ilast,idoc,jprt)
+      call matinter(crsfile,efile,nume,efile2,nume2,nemf,nemf2,lmax,irange,e2(ie2),emin,emax,e,nemax,crs,ifst,ilast,idoc,jprt)
 !
 ! *******************************************************************
 !                   put together spectrum:
@@ -321,38 +331,38 @@ PROGRAM rcvvaug
 !
 !
       ii = 0
-      DO k = -lmax - 1 , lmax
-         IF ( k/=0 ) THEN
+      do k = -lmax - 1 , lmax
+         if ( k/=0 ) then
 !
-            DO kp = -lmax - 1 , k
-               IF ( kp/=0 ) THEN
+            do kp = -lmax - 1 , k
+               if ( kp/=0 ) then
 !
                   ii = ii + 1
 !
-                  DO i = ifst , ilast
+                  do i = ifst , ilast
                      ip = ilast + ifst - i
                      y(i) = crs(i,k,kp)*dos(i,k)*dos(ip,kp)
-                  ENDDO
+                  enddo
                   p(ie2,ii) = simpson(y(ifst),nval,de)
-               ENDIF
+               endif
 !
-            ENDDO
-         ENDIF
-      ENDDO
+            enddo
+         endif
+      enddo
 !
 !
 ! sum up diagonal contributions and total spectrum:
 !
       pdiagg = 0.
       ptott = 0.
-      DO ii = 1 , ktot
-         IF ( ikap(ii)==ikapp(ii) ) pdiagg = pdiagg + p(ie2,ii)
+      do ii = 1 , ktot
+         if ( ikap(ii)==ikapp(ii) ) pdiagg = pdiagg + p(ie2,ii)
          ptott = ptott + p(ie2,ii)
-      ENDDO
+      enddo
       pdiag(ie2) = pdiagg
       ptot(ie2) = ptott
 !
-   ENDDO
+   enddo
 !
 !
 ! end of loop over final energies **********************************
@@ -361,27 +371,27 @@ PROGRAM rcvvaug
 ! determine relative magnitudes of partial spectra:
 !
    psumtot = 0.
-   DO ie2 = 1 , ne2
+   do ie2 = 1 , ne2
       psumtot = psumtot + ptot(ie2)
-   ENDDO
-   DO ii = 1 , ktot
+   enddo
+   do ii = 1 , ktot
       psumma = 0.
-      DO ie2 = 1 , ne2
+      do ie2 = 1 , ne2
          psumma = psumma + p(ie2,ii)
-      ENDDO
+      enddo
       psum(ii) = psumma/psumtot
-   ENDDO
+   enddo
 !
 ! maximum of total unbroadened spectrum:
 !
    pmax = 0.
-   DO i = 1 , ne2
-      IF ( ptot(i)>pmax ) pmax = ptot(i)
-   ENDDO
+   do i = 1 , ne2
+      if ( ptot(i)>pmax ) pmax = ptot(i)
+   enddo
 !
 ! ordering of partial spectra according to magnitude:
 !
-   CALL order(psum(1),ktot,iord)
+   call order(psum(1),ktot,iord)
 !
 !
 ! ********************************************************************
@@ -390,14 +400,14 @@ PROGRAM rcvvaug
 ! (only the most important contributions are broadened)
 !
    snorm = 0.
-   WRITE (6,*) ' broad'
-   CALL broad(e2(1),ptot,NEMAX2,ne2,iminb,e1(1),p1tot,phelp,N1M,n1,snorm,smax,hws,hwlf,hwc,u)
-   DO i = 1 , 4
-      WRITE (6,*) ' broad'
-      CALL broad(e2(1),p(1,iord(i)),NEMAX2,ne2,iminb,e1(1),p1(1,i),phelp,N1M,n1,snorm,dummy,hws,hwlf,hwc,u)
-   ENDDO
-   WRITE (6,*) ' broad'
-   CALL broad(e2(1),pdiag,NEMAX2,ne2,iminb,e1(1),p1diag,phelp,N1M,n1,snorm,dummy,hws,hwlf,hwc,u)
+   write (6,*) ' broad'
+   call broad(e2(1),ptot,nemax2,ne2,iminb,e1(1),p1tot,phelp,n1m,n1,snorm,smax,hws,hwlf,hwc,u)
+   do i = 1 , 4
+      write (6,*) ' broad'
+      call broad(e2(1),p(1,iord(i)),nemax2,ne2,iminb,e1(1),p1(1,i),phelp,n1m,n1,snorm,dummy,hws,hwlf,hwc,u)
+   enddo
+   write (6,*) ' broad'
+   call broad(e2(1),pdiag,nemax2,ne2,iminb,e1(1),p1diag,phelp,n1m,n1,snorm,dummy,hws,hwlf,hwc,u)
 !
 ! ********************************************************************
 !                      OUTPUT OF SPECTRA
@@ -408,338 +418,441 @@ PROGRAM rcvvaug
 !
 ! unbroadened spectra
 !
-   WRITE (jprt,*) ' unbroadened spectra'
-   WRITE (jprt,99007) (ikap(iord(i)),ikapp(iord(i)),i=1,4)
-   WRITE (jprt,99008) (e2(i)-e2max,ptot(i),(p(i,iord(ii)),ii=1,4),pdiag(i),i=1,ne2)
+   write (jprt,*) ' unbroadened spectra'
+   write (jprt,99007) (ikap(iord(i)),ikapp(iord(i)),i=1,4)
+   write (jprt,99008) (e2(i)-e2max,ptot(i),(p(i,iord(ii)),ii=1,4),pdiag(i),i=1,ne2)
 !
 !
 ! broadened spectra
 !
-   WRITE (jspect,99003) namorb
-   WRITE (jspect,99006) ecore*efac
-   WRITE (jspect,99007) (ikap(iord(i)),ikapp(iord(i)),i=1,4)
-   WRITE (jspect,99008) (e1(i)-e2maxev,p1tot(i)/snorm,(p1(i,ii)/snorm,ii=1,4),p1diag(i)/snorm,i=iminb,n1)
+   write (jspect,99003) namorb
+   write (jspect,99006) ecore*efac
+   write (jspect,99007) (ikap(iord(i)),ikapp(iord(i)),i=1,4)
+   write (jspect,99008) (e1(i)-e2maxev,p1tot(i)/snorm,(p1(i,ii)/snorm,ii=1,4),p1diag(i)/snorm,i=iminb,n1)
 !
-   WRITE (jspect,99009) (ikap(iord(i)),ikapp(iord(i)),i=1,4)
-99009 FORMAT (4x,'e2',5x,4x,'Total',4(4x,i2,1x,i2),4x,'Diag.')
-   WRITE (jspect,99006) (e1(i)-e2maxev,p1tot(i),(p1(i,ii),ii=1,4),p1diag(i),i=iminb,n1)
-!
-!
-   STOP ' FORTRAN stop'
+   write (jspect,99009) (ikap(iord(i)),ikapp(iord(i)),i=1,4)
+99009 format (4x,'e2',5x,4x,'Total',4(4x,i2,1x,i2),4x,'Diag.')
+   write (jspect,99006) (e1(i)-e2maxev,p1tot(i),(p1(i,ii),ii=1,4),p1diag(i),i=iminb,n1)
 !
 !
-99001 FORMAT (a50)
-99002 FORMAT (a78)
-99003 FORMAT (a10)
-99006 FORMAT (f11.5,6F9.3)
-99007 FORMAT (4x,'e2',5x,5x,'Total',3x,4(5x,i2,1x,i2,3x),5x,'Diag.')
-99008 FORMAT (f11.5,6E13.5)
-END PROGRAM rcvvaug
+   stop ' FORTRAN stop'
 !
-!*==DOSBROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE dosbroad(Ef,Nef,E,Udos,Hwlr,Dos,Lmax)
+!
+99001 format (a50)
+99002 format (a78)
+99003 format (a10)
+99006 format (f11.5,6F9.3)
+99007 format (4x,'e2',5x,5x,'Total',3x,4(5x,i2,1x,i2,3x),5x,'Diag.')
+99008 format (f11.5,6E13.5)
+end program RCVVAUG
+!
+!
+subroutine dosbroad(ef,nef,e,udos,hwlr,dos,lmax)
 ! ====================================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a , convlo , Dos , E , Ef , estep , gam , Hwlr , hwlr0 , pi , Udos
-   INTEGER i , ilor , j , k , KM , Lmax , Nef , NEMAX
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! PARAMETER definitions rewritten by SPAG
+!
+   integer , parameter :: NEMAX = 500 , KM = 3
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   real(REAL64) , intent(in) :: EF
+   integer :: NEF
+   real(REAL64) , intent(in) , dimension(nemax) :: E
+   real(REAL64) , intent(in) , dimension(nemax,-km-1:km) :: UDOS
+   real(REAL64) , intent(in) :: HWLR
+   real(REAL64) , intent(out) , dimension(nemax,-km-1:km) :: DOS
+   integer , intent(in) :: LMAX
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) , dimension(nemax) :: A
+   real(REAL64) , external :: CONVLO
+   real(REAL64) :: ESTEP , GAM
+   real(REAL64) , save :: HWLR0 , PI
+   integer :: I , J , K
+   integer , save :: ILOR
+!
+! End of declarations rewritten by SPAG
+!
 !
 ! life-time broadening of valence band states with Lorentzian
 ! only states below Efermi enter the integral
 ! DOS is required on an equidistant energy mesh!
 !
-   PARAMETER (NEMAX=500)
-   PARAMETER (KM=3)
+   data pi/3.141596/ , ilor/2/ , hwlr0/0.1/
 !
-   DIMENSION E(NEMAX) , Udos(NEMAX,-KM-1:KM) , Dos(NEMAX,-KM-1:KM)
-   DIMENSION a(NEMAX)
+   write (6,*) ' I am in dosbroad'
+   if ( hwlr<hwlr0 ) then
+      do k = -lmax - 1 , lmax
+         if ( k/=0 ) then
+            do j = 1 , nef
+               dos(j,k) = udos(j,k)
+            enddo
+         endif
+      enddo
+      write (6,*) ' I am out of dosbroad'
+      return
+   endif
 !
-   DATA pi/3.141596/ , ilor/2/ , hwlr0/0.1/
-!
-   WRITE (6,*) ' I am in dosbroad'
-   IF ( Hwlr<hwlr0 ) THEN
-      DO k = -Lmax - 1 , Lmax
-         IF ( k/=0 ) THEN
-            DO j = 1 , Nef
-               Dos(j,k) = Udos(j,k)
-            ENDDO
-         ENDIF
-      ENDDO
-      WRITE (6,*) ' I am out of dosbroad'
-      RETURN
-   ENDIF
-!
-   estep = E(2) - E(1)
-   DO k = -Lmax - 1 , Lmax
-      IF ( k/=0 ) THEN
-         DO i = 1 , Nef
-            DO j = 1 , Nef
-               a(j) = Udos(j,k)
-            ENDDO
+   estep = e(2) - e(1)
+   do k = -lmax - 1 , lmax
+      if ( k/=0 ) then
+         do i = 1 , nef
+            do j = 1 , nef
+               a(j) = udos(j,k)
+            enddo
 ! halfwidth of Lor. increases linearly with binding E.:
-            IF ( ilor==1 ) gam = Hwlr*(Ef-E(i))/(Ef-E(1))/2.0E0
+            if ( ilor==1 ) gam = hwlr*(ef-e(i))/(ef-e(1))/2.0E0
 ! halfwidth of Lor. increases quadr.:
-            IF ( ilor==2 ) gam = Hwlr*((Ef-E(i))/(Ef-E(1)))**2/2.0E0
-            Dos(i,k) = convlo(gam,a(1),i,estep,1,Nef,pi)
-         ENDDO
-      ENDIF
-   ENDDO
+            if ( ilor==2 ) gam = hwlr*((ef-e(i))/(ef-e(1)))**2/2.0E0
+            dos(i,k) = convlo(gam,a(1),i,estep,1,nef,pi)
+         enddo
+      endif
+   enddo
 !
-   WRITE (6,*) ' Out of dosbroad'
-END SUBROUTINE dosbroad
+   write (6,*) ' Out of dosbroad'
+end subroutine DOSBROAD
 !
-!*==BROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE broad(Ein,A0,N0,Max0,Mine1,E1,A1,Ai,N1m,N1,Snorm,Smax,Hws,Hwl,Hwc,U)
+!
+subroutine broad(ein,a0,n0,max0,mine1,e1,a1,ai,n1m,n1,snorm,smax,hws,hwl,hwc,u)
 ! ==============================================================
 !
 !     interpolate to plot-grid and convolute with lorentzian
 !     for life-time broadening of core hole + valence band holes
 !     and gaussian spectrometer resolution
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A0 , A1 , afac , ah , Ai , bfac , cfac , convgau , convlo , de0 , dele , e0 , e00 , e0max , E1 , Ein , emin0 , estep ,   &
-        & evmax , evmin
-   REAL*8 gam , gc , Hwc , hwc0 , Hwl , Hws , pi , Smax , Snorm , U
-   INTEGER i , i0 , ix0 , j , max , Max0 , Mine1 , N0 , N1 , N1m , NGC , nlst , NMAX
-!*** End of declarations inserted by SPAG
-   PARAMETER (NGC=100,NMAX=500)
-   DIMENSION Ein(N0) , A0(N0) , e0(NMAX) , E1(N1m) , A1(N1m) , Ai(N1m)
-   DIMENSION gc(-NGC:NGC) , ah(-NGC:NGC)
-   INTEGER :: spag_nextblock_1
-   DATA hwc0/5.E-03/ , cfac/13.606/
-   DATA estep/0.05E0/
-   DATA ix0/201/ , pi/3.141596/
-   spag_nextblock_1 = 1
-   SPAG_DispatchLoop_1: DO
-      SELECT CASE (spag_nextblock_1)
-      CASE (1)
+   use iso_fortran_env
+   implicit none
+!
+! PARAMETER definitions rewritten by SPAG
+!
+   integer , parameter :: NGC = 100 , NMAX = 500
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: N0
+   integer , intent(in) :: N1M
+   real(REAL64) , intent(in) , dimension(n0) :: EIN
+   real(REAL64) , intent(inout) , dimension(n0) :: A0
+   integer , intent(in) :: MAX0
+   integer , intent(inout) :: MINE1
+   real(REAL64) , intent(inout) , dimension(n1m) :: E1
+   real(REAL64) , intent(inout) , dimension(n1m) :: A1
+   real(REAL64) , dimension(n1m) :: AI
+   integer , intent(inout) :: N1
+   real(REAL64) , intent(inout) :: SNORM
+   real(REAL64) , intent(inout) :: SMAX
+   real(REAL64) , intent(in) :: HWS
+   real(REAL64) , intent(in) :: HWL
+   real(REAL64) , intent(in) :: HWC
+   real(REAL64) , intent(in) :: U
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: AFAC , BFAC , DE0 , DELE , E00 , E0MAX , EMIN0 , EVMAX , EVMIN , GAM
+   real(REAL64) , dimension(-ngc:ngc) :: AH , GC
+   real(REAL64) , save :: CFAC , ESTEP , HWC0 , PI
+   real(REAL64) , external :: CONVGAU , CONVLO
+   real(REAL64) , dimension(nmax) :: E0
+   integer :: I , I0 , J , MAX , NLST
+   integer , save :: IX0
+   external INTER
+!
+! End of declarations rewritten by SPAG
+!
+   data hwc0/5.E-03/ , cfac/13.606/
+   data estep/0.05E0/
+   data ix0/201/ , pi/3.141596/
 !
 !     convert from rydberg to ev:
 !
-         WRITE (6,*) ' I am in broad'
-         DO i = 1 , Max0
-            e0(i) = Ein(i)*cfac - U
-         ENDDO
-         de0 = e0(2) - e0(1)
-         e0max = e0(Max0)
-         e00 = e0max
-         DO i = Max0 + 1 , NMAX
-            e00 = e00 + de0
-            e0(i) = e00
-            A0(i) = 0.0
-            IF ( e00-e0max>U ) THEN
-               spag_nextblock_1 = 2
-               CYCLE SPAG_DispatchLoop_1
-            ENDIF
-         ENDDO
-         spag_nextblock_1 = 2
-      CASE (2)
-         max = i
+   write (6,*) ' I am in broad'
+   do i = 1 , max0
+      e0(i) = ein(i)*cfac - u
+   enddo
+   de0 = e0(2) - e0(1)
+   e0max = e0(max0)
+   e00 = e0max
+   do i = max0 + 1 , nmax
+      e00 = e00 + de0
+      e0(i) = e00
+      a0(i) = 0.0
+      if ( e00-e0max>u ) then
+         call SPAG_BLOCK_1
+         return
+      endif
+   enddo
+   call SPAG_BLOCK_1
+contains
+   subroutine SPAG_BLOCK_1
+      max = i
 !udo  this next line is not in the orginal program
-         nlst = N1
+      nlst = n1
 !
-         IF ( Snorm<=0.E0 ) THEN
+      if ( snorm<=0.E0 ) then
 !
-            evmin = e0(1) - 1.
-            evmax = e0(max) + 1.
-            SPAG_Loop_2_2: DO
-               N1 = idnint((evmax-evmin)/estep) + 1
-               IF ( N1>N1m ) THEN
-                  estep = estep + estep
-                  CYCLE
-               ENDIF
+         evmin = e0(1) - 1.
+         evmax = e0(max) + 1.
+         spag_loop_1_2: do
+            n1 = idnint((evmax-evmin)/estep) + 1
+            if ( n1>n1m ) then
+               estep = estep + estep
+               cycle
+            endif
 ! create nice numbers for energy:
-               i0 = idnint(evmin/estep)
-               evmin = i0*estep
+            i0 = idnint(evmin/estep)
+            evmin = i0*estep
 !
 !     set up plot-grid and determine min-energy
 !
-               nlst = N1
-               WRITE (6,*) ' I know what nlst is:' , nlst
-               DO i = 1 , N1
-                  E1(i) = evmin + (i-1)*estep
-                  IF ( E1(i)>e0(max) .AND. nlst==N1 ) nlst = i
-               ENDDO
-               SPAG_Loop_3_1: DO i = 1 , N0
-                  IF ( A0(i)>0.E0 ) EXIT SPAG_Loop_3_1
-               ENDDO SPAG_Loop_3_1
-               EXIT SPAG_Loop_2_2
-            ENDDO SPAG_Loop_2_2
-            emin0 = e0(i)
-            SPAG_Loop_2_3: DO i = 1 , N1
-               IF ( E1(i)>emin0 ) EXIT SPAG_Loop_2_3
-            ENDDO SPAG_Loop_2_3
-            Mine1 = i
-         ENDIF
+            nlst = n1
+            write (6,*) ' I know what nlst is:' , nlst
+            do i = 1 , n1
+               e1(i) = evmin + (i-1)*estep
+               if ( e1(i)>e0(max) .and. nlst==n1 ) nlst = i
+            enddo
+            spag_loop_2_1: do i = 1 , n0
+               if ( a0(i)>0.E0 ) exit spag_loop_2_1
+            enddo spag_loop_2_1
+            exit spag_loop_1_2
+         enddo spag_loop_1_2
+         emin0 = e0(i)
+         spag_loop_1_3: do i = 1 , n1
+            if ( e1(i)>emin0 ) exit spag_loop_1_3
+         enddo spag_loop_1_3
+         mine1 = i
+      endif
 !
 !
 !     interpolate
 !
-         DO i = Mine1 , nlst
-            j = 0
-            SPAG_Loop_3_4: DO
-               j = j + 1
-               IF ( e0(j)>=E1(i) .OR. j>=max ) THEN
-                  j = j - 2
-                  IF ( j<1 ) j = 1
-                  IF ( j>max-3 ) j = max - 3
-                  CALL inter(e0(j),A0(j),4,E1(i),Ai(i))
-                  EXIT SPAG_Loop_3_4
-               ENDIF
-            ENDDO SPAG_Loop_3_4
-         ENDDO
-         DO i = 1 , Mine1 - 1
-            Ai(i) = 0.
-         ENDDO
-         DO i = nlst + 1 , N1
-            Ai(i) = 0.
-         ENDDO
+      do i = mine1 , nlst
+         j = 0
+         spag_loop_2_4: do
+            j = j + 1
+            if ( e0(j)>=e1(i) .or. j>=max ) then
+               j = j - 2
+               if ( j<1 ) j = 1
+               if ( j>max-3 ) j = max - 3
+               call inter(e0(j),a0(j),4,e1(i),ai(i))
+               exit spag_loop_2_4
+            endif
+         enddo spag_loop_2_4
+      enddo
+      do i = 1 , mine1 - 1
+         ai(i) = 0.
+      enddo
+      do i = nlst + 1 , n1
+         ai(i) = 0.
+      enddo
 !
-         DO i = Mine1 , N1
+      do i = mine1 , n1
 !
 !     determine halfwidth for life-time broadening
 !     (2 final valence holes + 1 initial core hole)
 !
-            dele = (E1(nlst)-E1(i))/(E1(nlst)-E1(Mine1))
-            gam = (Hwl*dele*dele+Hwc)/2.0E0
+         dele = (e1(nlst)-e1(i))/(e1(nlst)-e1(mine1))
+         gam = (hwl*dele*dele+hwc)/2.0E0
 !
 !     convolute now
 !
-            A1(i) = convlo(gam,Ai,i,estep,Mine1,N1,pi)
-         ENDDO
+         a1(i) = convlo(gam,ai,i,estep,mine1,n1,pi)
+      enddo
 !
 !     overwrite unbroadened data in ai with life-time
 !     broadened spectrum
 !
-         DO i = 1 , N1
-            Ai(i) = A1(i)
-         ENDDO
-         IF ( Hws/=0. ) THEN
+      do i = 1 , n1
+         ai(i) = a1(i)
+      enddo
+      if ( hws/=0. ) then
 !
 !        set up gaussian convolution function
 !
-            afac = -alog(5.E-1)/(Hws/2.0E0)**2
-            bfac = sqrt(afac/pi)
-            DO i = -NGC , NGC
-               gc(i) = exp(-afac*(i*estep)**2)*bfac
-            ENDDO
+         afac = -alog(5.E-1)/(hws/2.0E0)**2
+         bfac = sqrt(afac/pi)
+         do i = -ngc , ngc
+            gc(i) = exp(-afac*(i*estep)**2)*bfac
+         enddo
 !
 !        convolute now
 !
-            DO i = Mine1 , N1
-               A1(i) = convgau(Ai,i,gc,ah,estep,NGC,N1)
-            ENDDO
-         ENDIF
+         do i = mine1 , n1
+            a1(i) = convgau(ai,i,gc,ah,estep,ngc,n1)
+         enddo
+      endif
 !
-         IF ( Snorm<=0.E0 ) THEN
+      if ( snorm<=0.E0 ) then
 !
 !     determine maximum and set equal to 100.
 !
-            Smax = 0.E0
-            DO i = Mine1 , N1
-               IF ( A1(i)>Smax ) Smax = A1(i)
-            ENDDO
-            Snorm = 100.D0/Smax
-         ENDIF
+         smax = 0.E0
+         do i = mine1 , n1
+            if ( a1(i)>smax ) smax = a1(i)
+         enddo
+         snorm = 100.D0/smax
+      endif
 !
 !
-         DO i = Mine1 , N1
-            A1(i) = A1(i)*Snorm
+      do i = mine1 , n1
+         a1(i) = a1(i)*snorm
 !
-         ENDDO
+      enddo
 !
-         WRITE (6,*) ' Out of broad'
-         EXIT SPAG_DispatchLoop_1
-      END SELECT
-   ENDDO SPAG_DispatchLoop_1
-END SUBROUTINE broad
+      write (6,*) ' Out of broad'
+   end subroutine SPAG_BLOCK_1
+end subroutine BROAD
 !
-!*==CONVLO.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
+!
+function convlo(gam,a1,ind,estep,mine1,n1,pi)
 ! ==================================================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A1 , atm , atp , Estep , Gam , Pi , sum
-   INTEGER i , Ind , Mine1 , N1
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! Function and Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: N1
+   real(REAL64) :: CONVLO
+   real(REAL64) , intent(in) :: GAM
+   real(REAL64) , intent(in) , dimension(n1) :: A1
+   integer , intent(in) :: IND
+   real(REAL64) , intent(in) :: ESTEP
+   integer , intent(in) :: MINE1
+   real(REAL64) , intent(in) :: PI
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: ATM , ATP , SUM
+   integer :: I
+!
+! End of declarations rewritten by SPAG
+!
 !
 !     do the convolution integral by trapezoidal rule
 !
-   DIMENSION A1(N1)
-   WRITE (6,*) ' Out of convlo'
+   write (6,*) ' Out of convlo'
    sum = 0.0
-   DO i = Mine1 , N1
-      atp = atan(Estep*((i-Ind)+0.5)/Gam)
-      atm = atan(Estep*((i-Ind)-0.5)/Gam)
-      sum = sum + A1(i)*(atp-atm)
-   ENDDO
-   convlo = sum/Pi
-   WRITE (6,*) ' Out of convlo'
-END FUNCTION convlo
+   do i = mine1 , n1
+      atp = atan(estep*((i-ind)+0.5)/gam)
+      atm = atan(estep*((i-ind)-0.5)/gam)
+      sum = sum + a1(i)*(atp-atm)
+   enddo
+   convlo = sum/pi
+   write (6,*) ' Out of convlo'
+end function CONVLO
 !
-!*==CONVGAU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION convgau(A1,Ind,Gc,Ah,Estep,Ngc,N1)
+!
+function convgau(a1,ind,gc,ah,estep,ngc,n1)
 ! ================================================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A1 , Ah , Estep , Gc , sum
-   INTEGER i , imx , Ind , N1 , Ngc
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! Function and Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NGC
+   integer , intent(in) :: N1
+   real(REAL64) :: CONVGAU
+   real(REAL64) , intent(in) , dimension(n1) :: A1
+   integer , intent(in) :: IND
+   real(REAL64) , intent(in) , dimension(-ngc:ngc) :: GC
+   real(REAL64) , intent(inout) , dimension(-ngc:ngc) :: AH
+   real(REAL64) , intent(in) :: ESTEP
+!
+! Local variable declarations rewritten by SPAG
+!
+   integer :: I , IMX
+   real(REAL64) :: SUM
+!
+! End of declarations rewritten by SPAG
+!
 !
 !     do the convolution integral by trapezoidal rule
 !
-   DIMENSION A1(N1) , Gc(-Ngc:Ngc) , Ah(-Ngc:Ngc)
 !
-   WRITE (6,*) ' In convgau'
-   DO i = -Ngc , Ngc
-      Ah(i) = 0.D0
-   ENDDO
-   DO i = 0 , Ngc
-      imx = Ind + i
-      IF ( imx>N1 ) THEN
-         CALL spag_block_1
-         RETURN
-      ENDIF
-      Ah(i) = A1(imx)*Gc(i)
-   ENDDO
-   CALL spag_block_1
-CONTAINS
-   SUBROUTINE spag_block_1
-      DO i = -1 , -Ngc , -1
-         imx = Ind + i
-         IF ( imx<1 ) THEN
-            CALL spag_block_2
-            RETURN
-         ENDIF
-         Ah(i) = A1(imx)*Gc(i)
-      ENDDO
-      CALL spag_block_2
-   END SUBROUTINE spag_block_1
-   SUBROUTINE spag_block_2
+   write (6,*) ' In convgau'
+   do i = -ngc , ngc
+      ah(i) = 0.D0
+   enddo
+   do i = 0 , ngc
+      imx = ind + i
+      if ( imx>n1 ) then
+         call SPAG_BLOCK_1
+         return
+      endif
+      ah(i) = a1(imx)*gc(i)
+   enddo
+   call SPAG_BLOCK_1
+contains
+   subroutine SPAG_BLOCK_1
+      do i = -1 , -ngc , -1
+         imx = ind + i
+         if ( imx<1 ) then
+            call SPAG_BLOCK_2
+            return
+         endif
+         ah(i) = a1(imx)*gc(i)
+      enddo
+      call SPAG_BLOCK_2
+   end subroutine SPAG_BLOCK_1
+   subroutine SPAG_BLOCK_2
       sum = 0.D0
-      DO i = -Ngc , Ngc
-         sum = sum + Ah(i)
-      ENDDO
+      do i = -ngc , ngc
+         sum = sum + ah(i)
+      enddo
 !
-      convgau = sum*Estep
+      convgau = sum*estep
 !
-      WRITE (6,*) ' Out of convgau'
-   END SUBROUTINE spag_block_2
-END FUNCTION convgau
+      write (6,*) ' Out of convgau'
+   end subroutine SPAG_BLOCK_2
+end function CONVGAU
 !
-!*==MATINTER.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE matinter(Crsfile,Efile,Nume,Efile2,Nume2,Nemf,Nemf2,Km,Irange,E2,Emin,Emax,E,Nemax,Crs,Ifst,Ilast,Idoc,Jprt)
+!
+subroutine matinter(crsfile,efile,nume,efile2,nume2,nemf,nemf2,km,irange,e2,emin,emax,e,nemax,crs,ifst,ilast,idoc,jprt)
 ! ========================================================
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 chelp , Crs , crs1 , Crsfile , E , E2 , ebar , Efile , Efile2 , ehelp , Emax , Emin
-   INTEGER i , i2 , Idoc , ie , iextra , if , if2l , if2r , ifl , ifr , Ifst , Ilast , insleft , insright , Irange , iright ,      &
-         & Jprt , k , Km , KML
-   INTEGER kp , l , leftind , lp , Nemax , Nemf , Nemf2 , nf , nint , NM , Nume , Nume2
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! PARAMETER definitions rewritten by SPAG
+!
+   integer , parameter :: KML = 3 , NM = 50
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NEMF
+   integer , intent(in) :: NEMF2
+   integer , intent(in) :: NEMAX
+   real(REAL64) , intent(in) , dimension(nemf,nemf2,-kml-1:kml,-kml-1:kml) :: CRSFILE
+   real(REAL64) , dimension(nemf) :: EFILE
+   integer :: NUME
+   real(REAL64) , dimension(nemf2) :: EFILE2
+   integer :: NUME2
+   integer , intent(in) :: KM
+   integer , intent(in) , dimension(nemf,nemf2) :: IRANGE
+   real(REAL64) :: E2
+   real(REAL64) :: EMIN
+   real(REAL64) :: EMAX
+   real(REAL64) , dimension(nemax) :: E
+   real(REAL64) , dimension(nemax,-kml-1:kml,-kml-1:kml) :: CRS
+   integer , intent(in) :: IFST
+   integer , intent(in) :: ILAST
+   integer , intent(in) :: IDOC
+   integer , intent(in) :: JPRT
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) , dimension(nm) :: CHELP , EHELP
+   real(REAL64) , dimension(nm,-kml-1:kml,-kml-1:kml) :: CRS1
+   real(REAL64) :: EBAR
+   integer :: I , I2 , IE , IEXTRA , IF , IF2L , IF2R , IFL , IFR , INSLEFT , INSRIGHT , K , KP , L , LP , NF , NINT
+   integer , external :: IRIGHT , LEFTIND
+   external LAGRANGE
+!
+! End of declarations rewritten by SPAG
+!
 !
 ! interpolation of CVV matrix elements on DOS energy grid for
 ! a special final state energy
@@ -761,332 +874,393 @@ SUBROUTINE matinter(Crsfile,Efile,Nume,Efile2,Nume2,Nemf,Nemf2,Km,Irange,E2,Emin
 !
 ! output: crs
 !
-   PARAMETER (KML=3,NM=50)
 !
-   DIMENSION Crsfile(Nemf,Nemf2,-KML-1:KML,-KML-1:KML) , Efile(Nemf) , Efile2(Nemf2) , Irange(Nemf,Nemf2) , E(Nemax) ,             &
-           & Crs(Nemax,-KML-1:KML,-KML-1:KML)
-   DIMENSION ehelp(NM) , chelp(NM) , crs1(NM,-KML-1:KML,-KML-1:KML)
-   WRITE (6,*) ' In matinter'
+   write (6,*) ' In matinter'
 !
 ! find efile2 points immediately left and right
 ! of the actual e2 (if2l,if2r):
-   if2l = leftind(Efile2,Nume2,E2)
-   if2r = iright(Efile2,Nume2,E2)
+   if2l = leftind(efile2,nume2,e2)
+   if2r = iright(efile2,nume2,e2)
 !
 ! valence band energy range: find efile points immediately
 ! left of emin and right of emax (ifl,ifr):
-   ifl = leftind(Efile,Nume,Emin)
-   ifr = iright(Efile,Nume,Emax)
+   ifl = leftind(efile,nume,emin)
+   ifr = iright(efile,nume,emax)
 !
 ! for interpolation lateron, we may have to calculate the boundary
 ! values of the crs in a different way (to understand the whole
 ! thing, draw a diagram e vs. e2)
    insleft = 0
    insright = 0
-   IF ( Irange(ifl,if2r)==0 ) insleft = 1
-   IF ( Irange(ifr,if2l)==0 ) insright = 1
+   if ( irange(ifl,if2r)==0 ) insleft = 1
+   if ( irange(ifr,if2l)==0 ) insright = 1
 !
 ! now calculate the crs's for e2 and all values of efile
 ! between ifl and ifr and store them in crs1:
 !
 ! boundary values (interpolation along boundaries of e/e2 range):
    nint = 5
-   IF ( Nume<nint ) nint = Nume
-   IF ( insleft==1 ) THEN
-      ebar = (Efile2(Nume2)+Efile2(1))/2.
-      ehelp(ifl) = E2 - ebar + Efile(1)
+   if ( nume<nint ) nint = nume
+   if ( insleft==1 ) then
+      ebar = (efile2(nume2)+efile2(1))/2.
+      ehelp(ifl) = e2 - ebar + efile(1)
 !        if(ehelp(ifl).ge.emin)then
 !          ifl=ifl+1
 !          goto 295
 !        endif
-      DO l = -Km - 1 , Km
-         IF ( l/=0 ) THEN
-            DO lp = -Km - 1 , l
-               IF ( lp/=0 ) THEN
-                  DO i = Nume , 1 , -1
-                     i2 = Nume2 - Nume + i
-                     chelp(i) = Crsfile(i,i2,l,lp)
-                  ENDDO
-                  CALL lagrange(Efile(1),chelp(1),Nume,nint,ehelp(ifl),crs1(ifl,l,lp),iextra)
-               ENDIF
-            ENDDO
-         ENDIF
-      ENDDO
-      IF ( Idoc==1 ) WRITE (Jprt,99001)
-99001 FORMAT (' non-grid value for lower e boundary')
-   ENDIF
-   IF ( insright==1 ) THEN
-      ehelp(ifr) = E2 - Efile2(1) + Efile(1)
+      do l = -km - 1 , km
+         if ( l/=0 ) then
+            do lp = -km - 1 , l
+               if ( lp/=0 ) then
+                  do i = nume , 1 , -1
+                     i2 = nume2 - nume + i
+                     chelp(i) = crsfile(i,i2,l,lp)
+                  enddo
+                  call lagrange(efile(1),chelp(1),nume,nint,ehelp(ifl),crs1(ifl,l,lp),iextra)
+               endif
+            enddo
+         endif
+      enddo
+      if ( idoc==1 ) write (jprt,99001)
+99001 format (' non-grid value for lower e boundary')
+   endif
+   if ( insright==1 ) then
+      ehelp(ifr) = e2 - efile2(1) + efile(1)
 !        if(ehelp(ifr).le.emax)then
 !          ifl=ifl-1
 !          goto 297
 !        endif
-      DO l = -Km - 1 , Km
-         IF ( l/=0 ) THEN
-            DO lp = -Km - 1 , l
-               IF ( lp/=0 ) THEN
-                  DO i = 1 , Nume
-                     chelp(i) = Crsfile(i,i,l,lp)
-                  ENDDO
-                  CALL lagrange(Efile(1),chelp(1),Nume,nint,ehelp(ifr),crs1(ifr,l,lp),iextra)
-               ENDIF
-            ENDDO
-         ENDIF
-      ENDDO
-      IF ( Idoc==1 ) WRITE (Jprt,99002)
-99002 FORMAT (' non-grid value for upper e boundary')
-   ENDIF
-   IF ( Idoc==1 ) WRITE (Jprt,99003) ifl , ifr
-99003 FORMAT (' ifl,ifr: ',2I4)
+      do l = -km - 1 , km
+         if ( l/=0 ) then
+            do lp = -km - 1 , l
+               if ( lp/=0 ) then
+                  do i = 1 , nume
+                     chelp(i) = crsfile(i,i,l,lp)
+                  enddo
+                  call lagrange(efile(1),chelp(1),nume,nint,ehelp(ifr),crs1(ifr,l,lp),iextra)
+               endif
+            enddo
+         endif
+      enddo
+      if ( idoc==1 ) write (jprt,99002)
+99002 format (' non-grid value for upper e boundary')
+   endif
+   if ( idoc==1 ) write (jprt,99003) ifl , ifr
+99003 format (' ifl,ifr: ',2I4)
 !
 ! get the rest of crs1:
-   DO if = ifl , ifr
-      IF ( if/=ifl .OR. insleft/=1 ) THEN
-         IF ( if/=ifr .OR. insright/=1 ) THEN
-            ehelp(if) = Efile(if)
-            DO l = -Km - 1 , Km
-               IF ( l/=0 ) THEN
-                  DO lp = -Km - 1 , l
-                     IF ( lp/=0 ) THEN
-                        DO i = if , if + Nume - 1
-                           chelp(i) = Crsfile(if,i,l,lp)
-                        ENDDO
-                        CALL lagrange(Efile2(if),chelp(if),Nume,nint,E2,crs1(if,l,lp),iextra)
-                     ENDIF
-                  ENDDO
-               ENDIF
-            ENDDO
-         ENDIF
-      ENDIF
-   ENDDO
+   do if = ifl , ifr
+      if ( if/=ifl .or. insleft/=1 ) then
+         if ( if/=ifr .or. insright/=1 ) then
+            ehelp(if) = efile(if)
+            do l = -km - 1 , km
+               if ( l/=0 ) then
+                  do lp = -km - 1 , l
+                     if ( lp/=0 ) then
+                        do i = if , if + nume - 1
+                           chelp(i) = crsfile(if,i,l,lp)
+                        enddo
+                        call lagrange(efile2(if),chelp(if),nume,nint,e2,crs1(if,l,lp),iextra)
+                     endif
+                  enddo
+               endif
+            enddo
+         endif
+      endif
+   enddo
 !
-   IF ( Idoc==1 ) THEN
-      WRITE (Jprt,99004)
-99004 FORMAT (' crs1:')
-      DO i = ifl , ifr
-         WRITE (Jprt,99005) i , ehelp(i) , ((crs1(i,l,lp),lp=-Km-1,l),l=-Km-1,-1) ,                                                &
-                          & ((crs1(i,l,lp),lp=-Km-1,-1),(crs1(i,l,lp),lp=1,l),l=1,Km)
-99005    FORMAT (i3,f10.5,28E13.5)
-      ENDDO
-   ENDIF
+   if ( idoc==1 ) then
+      write (jprt,99004)
+99004 format (' crs1:')
+      do i = ifl , ifr
+         write (jprt,99005) i , ehelp(i) , ((crs1(i,l,lp),lp=-km-1,l),l=-km-1,-1) ,                                                &
+                          & ((crs1(i,l,lp),lp=-km-1,-1),(crs1(i,l,lp),lp=1,l),l=1,km)
+99005    format (i3,f10.5,28E13.5)
+      enddo
+   endif
  
 !
 ! now we have a function crs1 on a mesh efile and we want a function
 ! crs on a mesh e and that's all
    nf = ifr - ifl + 1
    nint = 6
-   IF ( nint>nf ) nint = nf
-   DO ie = Ifst , Ilast
-      DO l = -Km - 1 , Km
-         IF ( l/=0 ) THEN
-            DO lp = -Km - 1 , l
-               IF ( lp/=0 ) THEN
-                  DO i = ifl , ifr
+   if ( nint>nf ) nint = nf
+   do ie = ifst , ilast
+      do l = -km - 1 , km
+         if ( l/=0 ) then
+            do lp = -km - 1 , l
+               if ( lp/=0 ) then
+                  do i = ifl , ifr
                      chelp(i) = crs1(i,l,lp)
-                  ENDDO
-                  CALL lagrange(Efile(ifl),chelp(ifl),nf,nint,E(ie),Crs(ie,l,lp),iextra)
-                  IF ( iextra==1 .AND. Idoc==1 ) WRITE (Jprt,99006) ie , E(ie) , ((Crs(ie,k,kp),kp=-Km-1,k),k=-Km-1,-1) ,          &
-                     & ((Crs(ie,k,kp),kp=-Km-1,-1),(Crs(ie,k,kp),kp=1,k),k=1,Km)
-99006             FORMAT (' extrapolation: crs, ie=',i3,' e(ie)=',f10.5/28E13.5)
-               ENDIF
-            ENDDO
-         ENDIF
-      ENDDO
-   ENDDO
+                  enddo
+                  call lagrange(efile(ifl),chelp(ifl),nf,nint,e(ie),crs(ie,l,lp),iextra)
+                  if ( iextra==1 .and. idoc==1 ) write (jprt,99006) ie , e(ie) , ((crs(ie,k,kp),kp=-km-1,k),k=-km-1,-1) ,          &
+                     & ((crs(ie,k,kp),kp=-km-1,-1),(crs(ie,k,kp),kp=1,k),k=1,km)
+99006             format (' extrapolation: crs, ie=',i3,' e(ie)=',f10.5/28E13.5)
+               endif
+            enddo
+         endif
+      enddo
+   enddo
 !
 ! test output:
-   IF ( Idoc==1 ) THEN
-      WRITE (Jprt,99007) E2
-99007 FORMAT (' e2: ',f10.5)
-      DO ie = Ifst , Ilast
-         WRITE (Jprt,99008) ie , E(ie) , ((Crs(ie,l,lp),lp=-Km-1,l),l=-Km-1,-1) , ((Crs(ie,l,lp),lp=-Km-1,-1),(Crs(ie,l,lp),lp=1,l)&
-                          & ,l=1,Km)
-99008    FORMAT (i3,f10.5,28E13.4)
-      ENDDO
-      WRITE (Jprt,99009)
-99009 FORMAT (120('-'))
-   ENDIF
-   WRITE (6,*) ' out of matinter'
-END SUBROUTINE matinter
+   if ( idoc==1 ) then
+      write (jprt,99007) e2
+99007 format (' e2: ',f10.5)
+      do ie = ifst , ilast
+         write (jprt,99008) ie , e(ie) , ((crs(ie,l,lp),lp=-km-1,l),l=-km-1,-1) , ((crs(ie,l,lp),lp=-km-1,-1),(crs(ie,l,lp),lp=1,l)&
+                          & ,l=1,km)
+99008    format (i3,f10.5,28E13.4)
+      enddo
+      write (jprt,99009)
+99009 format (120('-'))
+   endif
+   write (6,*) ' out of matinter'
+end subroutine MATINTER
 !
-!*==LAGRANGE.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE lagrange(X,Y,Ndim,Npkt,Xval,Yinter,Iextra)
+!
+subroutine lagrange(x,y,ndim,npkt,xval,yinter,iextra)
 ! =========================================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   INTEGER Iextra , ifst , igr , ileft , Ndim , Npkt
-   REAL*8 X , Xval , Y , Yinter
-!*** End of declarations inserted by SPAG
-   DIMENSION X(Ndim) , Y(Ndim)
+   use iso_fortran_env
+   implicit none
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NDIM
+   real(REAL64) , dimension(ndim) :: X
+   real(REAL64) , dimension(ndim) :: Y
+   integer :: NPKT
+   real(REAL64) :: XVAL
+   real(REAL64) :: YINTER
+   integer , intent(out) :: IEXTRA
+!
+! Local variable declarations rewritten by SPAG
+!
+   integer :: IFST , IGR , ILEFT
+   external INTER
+!
+! End of declarations rewritten by SPAG
+!
 !
 ! Interpolation mit Komfort
 ! iextra = 0, wenn keine Extrapolation
 !          1, wenn Extrapolation nach oben
 !         -1, wenn Extrapolation nach unten
 !
-   WRITE (6,*) ' in lagrange'
-   Iextra = 0
-   IF ( Xval<X(1) ) Iextra = -1
-   IF ( Xval>X(Ndim) ) Iextra = 1
+   write (6,*) ' in lagrange'
+   iextra = 0
+   if ( xval<x(1) ) iextra = -1
+   if ( xval>x(ndim) ) iextra = 1
 !
-! Find 1st point to the right of xval if it exists::
+! Suche 1. Punkt rechts von xval, falls es ihn gibt:
    igr = 0
-   SPAG_Loop_1_1: DO
+   spag_loop_1_1: do
       igr = igr + 1
-      IF ( X(igr)==Xval ) THEN
-         Yinter = Y(igr)
-         RETURN
-      ENDIF
-      IF ( X(igr)>=Xval .OR. igr>=Ndim ) THEN
+      if ( x(igr)==xval ) then
+         yinter = y(igr)
+         return
+      endif
+      if ( x(igr)>=xval .or. igr>=ndim ) then
 !
-! Determine 1st point f. interpolation
-         ileft = Npkt/2
-         IF ( mod(Npkt,2)/=0 ) ileft = ileft + 1
+! Bestimme 1. Punkt f. Interpolation
+         ileft = npkt/2
+         if ( mod(npkt,2)/=0 ) ileft = ileft + 1
          ifst = igr - ileft
 !
-         IF ( ifst<=0 ) ifst = 1
-         IF ( ifst>Ndim-Npkt+1 ) ifst = Ndim - Npkt + 1
+         if ( ifst<=0 ) ifst = 1
+         if ( ifst>ndim-npkt+1 ) ifst = ndim - npkt + 1
 !
-! Let's interpolate:
-         CALL inter(X(ifst),Y(ifst),Npkt,Xval,Yinter)
-! And that's about it, folks!
-         WRITE (6,*) ' Out of Lagrange'
-         EXIT SPAG_Loop_1_1
-      ENDIF
-   ENDDO SPAG_Loop_1_1
-END SUBROUTINE lagrange
+! Lasst uns interpolieren:
+         call inter(x(ifst),y(ifst),npkt,xval,yinter)
+! Und das war's dann auch schon, Leute!
+         write (6,*) ' Out of Lagrange'
+         exit spag_loop_1_1
+      endif
+   enddo spag_loop_1_1
+end subroutine LAGRANGE
 !
-!*==INTER.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE inter(R,P,N,Rs,Ps)
+!
+subroutine inter(r,p,n,rs,ps)
 ! =================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 denom , P , Ps , R , Rs , term
-   INTEGER i , j , N
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: N
+   real(REAL64) , intent(in) , dimension(n) :: R
+   real(REAL64) , intent(in) , dimension(n) :: P
+   real(REAL64) , intent(in) :: RS
+   real(REAL64) , intent(inout) :: PS
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: DENOM , TERM
+   integer :: I , J
+!
+! End of declarations rewritten by SPAG
+!
 !
 !     interpolate via lagrange
 !
-   DIMENSION R(N) , P(N)
-   WRITE (6,*) ' In inter'
-   Ps = 0.E0
-   DO j = 1 , N
+   write (6,*) ' In inter'
+   ps = 0.E0
+   do j = 1 , n
       term = 1.E0
       denom = 1.E0
-      DO i = 1 , N
-         IF ( i/=j ) THEN
-            denom = denom*(R(j)-R(i))
-            term = term*(Rs-R(i))
-         ENDIF
-      ENDDO
-      Ps = Ps + term*P(j)/denom
-   ENDDO
-   WRITE (6,*) ' Out of inter'
-END SUBROUTINE inter
+      do i = 1 , n
+         if ( i/=j ) then
+            denom = denom*(r(j)-r(i))
+            term = term*(rs-r(i))
+         endif
+      enddo
+      ps = ps + term*p(j)/denom
+   enddo
+   write (6,*) ' Out of inter'
+end subroutine INTER
 !
-!*==LEFTIND.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-INTEGER FUNCTION leftind(Field,Ndim,Value)
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   INTEGER i , Ndim
-!*** End of declarations inserted by SPAG
+!
+function leftind(field,ndim,value)
+   use iso_fortran_env
+   implicit none
+!
+! Function and Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NDIM
+   integer :: LEFTIND
+   real(REAL64) , intent(in) , dimension(ndim) :: FIELD
+   real(REAL64) , intent(in) :: VALUE
+!
+! Local variable declarations rewritten by SPAG
+!
+   integer :: I
+!
+! End of declarations rewritten by SPAG
+!
 ! ==============================================
 ! index of the field element immediately left of value
 ! if value is lower than field(1), 1 is returned
 !      implict real*8 (a-h,o-z)
-   REAL*8 Field , Value
-   DIMENSION Field(Ndim)
-   DO i = Ndim , 1 , -1
-      IF ( Field(i)<Value ) THEN
-         CALL spag_block_1
-         RETURN
-      ENDIF
-   ENDDO
-   CALL spag_block_1
-!
-CONTAINS
-   SUBROUTINE spag_block_1
+   do i = ndim , 1 , -1
+      if ( field(i)<value ) then
+         call SPAG_BLOCK_1
+         return
+      endif
+   enddo
+   call SPAG_BLOCK_1
+contains
+   subroutine SPAG_BLOCK_1
       leftind = i
-      IF ( leftind<1 ) leftind = 1
-   END SUBROUTINE spag_block_1
-END FUNCTION leftind
+      if ( leftind<1 ) leftind = 1
+   end subroutine SPAG_BLOCK_1
+end function LEFTIND
 !
-!*==IRIGHT.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-INTEGER FUNCTION iright(Field,Ndim,Value)
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   INTEGER i , Ndim
-!*** End of declarations inserted by SPAG
+!
+function iright(field,ndim,value)
+   use iso_fortran_env
+   implicit none
+!
+! Function and Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NDIM
+   integer :: IRIGHT
+   real(REAL64) , intent(in) , dimension(ndim) :: FIELD
+   real(REAL64) , intent(in) :: VALUE
+!
+! Local variable declarations rewritten by SPAG
+!
+   integer :: I
+!
+! End of declarations rewritten by SPAG
+!
 ! =============================================
 ! index of the field element immediately right of value
 ! if value is greater than fieldhndim), ndim is returned
 !      implict real*8 (a-h,o-z)
-   REAL*8 Field , Value
-   DIMENSION Field(Ndim)
-   DO i = 1 , Ndim
-      IF ( Field(i)>Value ) THEN
-         CALL spag_block_1
-         RETURN
-      ENDIF
-   ENDDO
-   CALL spag_block_1
-!
-CONTAINS
-   SUBROUTINE spag_block_1
+   do i = 1 , ndim
+      if ( field(i)>value ) then
+         call SPAG_BLOCK_1
+         return
+      endif
+   enddo
+   call SPAG_BLOCK_1
+contains
+   subroutine SPAG_BLOCK_1
       iright = i
-      IF ( iright>Ndim ) iright = Ndim
-   END SUBROUTINE spag_block_1
-END FUNCTION iright
+      if ( iright>ndim ) iright = ndim
+   end subroutine SPAG_BLOCK_1
+end function IRIGHT
 !
-!*==SIMPSON.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION simpson(Fct,N,Dx)
+!
+function simpson(fct,n,dx)
 ! ===============================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 Dx , Fct , sum , x0 , x1 , x2
-   INTEGER i , N
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! Function and Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: N
+   real(REAL64) :: SIMPSON
+   real(REAL64) , intent(in) , dimension(n) :: FCT
+   real(REAL64) , intent(in) :: DX
+!
+! Local variable declarations rewritten by SPAG
+!
+   integer :: I
+   real(REAL64) :: SUM , X0 , X1 , X2
+!
+! End of declarations rewritten by SPAG
+!
 ! integration of fct using simpson integration
 ! equidistant point mesh
-   DIMENSION Fct(N)
    sum = 0.
-   x0 = Fct(1)
+   x0 = fct(1)
 !
-   DO i = 3 , N , 2
-      x1 = Fct(i-1)
-      x2 = Fct(i)
-      sum = sum + Dx*(x0+4*x1+x2)
+   do i = 3 , n , 2
+      x1 = fct(i-1)
+      x2 = fct(i)
+      sum = sum + dx*(x0+4*x1+x2)
       x0 = x2
-   ENDDO
+   enddo
    simpson = sum/3.
-   IF ( mod(N,2)==0 ) simpson = simpson + (Fct(N)+Fct(N-1))*Dx/2.
-END FUNCTION simpson
+   if ( mod(n,2)==0 ) simpson = simpson + (fct(n)+fct(n-1))*dx/2.
+end function SIMPSON
 !
-!*==ORDER.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE order(F,N,Ior)
+!
+subroutine order(f,n,ior)
 ! =============================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 F , g
-   INTEGER i , Ior , j , l , N
-!*** End of declarations inserted by SPAG
-   DIMENSION F(N) , Ior(N)
+   use iso_fortran_env
+   implicit none
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: N
+   real(REAL64) , intent(inout) , dimension(n) :: F
+   integer , intent(inout) , dimension(n) :: IOR
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: G
+   integer :: I , J , L
+!
+! End of declarations rewritten by SPAG
+!
 !
 ! f is to be arranged in decreasing order
-   DO i = 1 , N
-      Ior(i) = i
-   ENDDO
+   do i = 1 , n
+      ior(i) = i
+   enddo
 !
-   DO i = 1 , N - 1
-      DO j = i + 1 , N
-         IF ( F(j)>F(i) ) THEN
-            g = F(j)
-            F(j) = F(i)
-            F(i) = g
-            l = Ior(j)
-            Ior(j) = Ior(i)
-            Ior(i) = l
-         ENDIF
-      ENDDO
-   ENDDO
-END SUBROUTINE order
+   do i = 1 , n - 1
+      do j = i + 1 , n
+         if ( f(j)>f(i) ) then
+            g = f(j)
+            f(j) = f(i)
+            f(i) = g
+            l = ior(j)
+            ior(j) = ior(i)
+            ior(i) = l
+         endif
+      enddo
+   enddo
+end subroutine ORDER

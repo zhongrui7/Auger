@@ -1,3 +1,5 @@
+program rcvvmat
+!
 ! ********************************************************************
 !  RELATIVISTIC MATRIXELEMENTS FOR CORE-VALENCE-VALENCE AUGER SPECTRA
 ! ********************************************************************
@@ -5,58 +7,53 @@
 ! the highest possible values for momentum, l are set in l.par
 !                   (lmax=2*lvmax+lcore+2)
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a0 , chuge , clight , coef , contr , crsecs , csmall , de , dummy , dx , e , e0 , e2 , earr , earr2 , ec1 , emin2 , ep , &
-        & ev , fc1
-   REAL*8 fcwf , fvwf , fvwfp , gc1 , gcwf , gvwf , gvwfp , half , pi , result , rmt , rs , rws , sd , sde , sigd , sigde , signv ,&
-        & small , ssum
-   REAL*8 sum1 , sum2 , tiny , v , w1v , w1vp , w3j , w6j , wv2 , wvp2 , x , x0 , xj1 , xs , y , y1 , y2 , yp , zeromt
-   INTEGER i , i2 , ii , ip , irange , j , j1 , jj , jj1 , jj2 , jjp , jp , kap , kap1 , kap2 , kapp , kout , kout1 , l , l1
-   INTEGER l2 , lam , lamp , lkap , lkapp , llam , llamp , lp , lval , ne , ne2 , nei , nei2 , neip , NEMAX , NEMAX2 , nmt ,       &
-         & nonrel , norm , NRAD
-   INTEGER nwf , nws
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
 !
-   PARAMETER (NRAD=250)
-   PARAMETER (NEMAX=15,NEMAX2=2*NEMAX)
-   INCLUDE 'l.par'
+! PARAMETER definitions rewritten by SPAG
 !
-   DIMENSION v(NRAD) , rs(NRAD) , xs(NRAD)
-   DIMENSION earr(NEMAX) , earr2(NEMAX2) , irange(NEMAX,NEMAX2)
+   integer , parameter :: NRAD = 250 , NEMAX = 15 , NEMAX2 = 2*nemax , LVMAX = 2 , LCORE = 2 , LMAX = lcore + 2*lvmax + 2 ,        &
+                        & LMAX2 = 2*lmax
 !
-   DIMENSION gc1(NRAD) , fc1(NRAD)
-   DIMENSION gvwf(NRAD,-LMAX-1:LMAX) , fvwf(NRAD,-LMAX-1:LMAX)
-   DIMENSION gvwfp(NRAD,-LMAX-1:LMAX) , fvwfp(NRAD,-LMAX-1:LMAX)
-   DIMENSION gcwf(NRAD,-LMAX-1:LMAX) , fcwf(NRAD,-LMAX-1:LMAX)
+! Local variable declarations rewritten by SPAG
 !
-   DIMENSION sd(-LVMAX-1:LVMAX,-LVMAX-1:LVMAX)
-   DIMENSION sde(-LVMAX-1:LVMAX,-LVMAX-1:LVMAX)
-   DIMENSION ssum(-LVMAX-1:LVMAX,-LVMAX-1:LVMAX,NEMAX)
-   DIMENSION crsecs(-LVMAX-1:LVMAX,-LVMAX-1:LVMAX,NEMAX,NEMAX2)
+   real(REAL64) :: A0 , CLIGHT , COEF , CONTR , DE , DUMMY , DX , E , E0 , E2 , EC1 , EMIN2 , EP , RESULT , RMT , RWS , SIGD ,     &
+                 & SIGDE , SIGNV , SUM1 , SUM2 , W1V , W1VP , WV2 , WVP2 , X , X0 , XJ1 , Y , Y1 , Y2 , YP , ZEROMT
+   real(REAL64) , save :: CHUGE , CSMALL , EV , HALF , PI , SMALL , TINY
+   real(REAL64) , dimension(-lvmax-1:lvmax,-lvmax-1:lvmax,nemax,nemax2) :: CRSECS
+   real(REAL64) , dimension(nemax) :: EARR
+   real(REAL64) , dimension(nemax2) :: EARR2
+   real(REAL64) , dimension(nrad) :: FC1 , GC1 , RS , V , XS
+   real(REAL64) , dimension(nrad,-lmax-1:lmax) :: FCWF , FVWF , FVWFP , GCWF , GVWF , GVWFP
+   character(50) :: FILEN
+   integer :: I , I2 , II , IN , IP , J , J1 , JJ , JJ1 , JJ2 , JJP , JP , KAP , KAP1 , KAP2 , KAPP , KOUT , KOUT1 , L , L1 , L2 , &
+            & LAM , LAMP , LKAP , LKAPP , LLAM , LLAMP , LP , LVAL , MAT , NE , NE2 , NEI , NEI2 , NEIP , NMT , NONREL , NORM ,    &
+            & NWF , NWS , PO , PUN , WF , ZATOM
+   real(REAL64) , dimension(-lmax-1:lmax,0:lmax) :: IDFF , IDFG , IDGF , IDGG , IEFF , IEFG , IEGF , IEGG
+   integer , dimension(nemax,nemax2) :: IRANGE
+   character(1) , dimension(40) :: NAME
+   character(1) , dimension(5) :: NORB , NORB1
+   integer , dimension(-lmax-1:lmax) :: RJ , RL , RLB
+   real(REAL64) , dimension(-lvmax-1:lvmax,-lvmax-1:lvmax) :: SD , SDE
+   real(REAL64) , dimension(-lvmax-1:lvmax,-lvmax-1:lvmax,nemax) :: SSUM
+   real(REAL64) , dimension(-lmax-1:lmax,-lmax-1:lmax,0:lmax2) :: W3J
+   real(REAL64) , dimension(0:lvmax,0:lvmax,0:lmax,0:lmax,0:lmax) :: W6J
+   external CEI , WAFU , WIG3J , WIG6J
 !
-   REAL*8 idgg(-LMAX-1:LMAX,0:LMAX) , idgf(-LMAX-1:LMAX,0:LMAX) , idfg(-LMAX-1:LMAX,0:LMAX) , idff(-LMAX-1:LMAX,0:LMAX) ,          &
-        & iegg(-LMAX-1:LMAX,0:LMAX) , iegf(-LMAX-1:LMAX,0:LMAX) , iefg(-LMAX-1:LMAX,0:LMAX) , ieff(-LMAX-1:LMAX,0:LMAX)
+! End of declarations rewritten by SPAG
 !
-   INTEGER rl(-LMAX-1:LMAX) , rlb(-LMAX-1:LMAX) , rj(-LMAX-1:LMAX)
+!      include 'l.par'
+ 
+   integer :: SPAG_NextBlock_1
 !
-   DIMENSION w3j(-LMAX-1:LMAX,-LMAX-1:LMAX,0:LMAX2)
-   DIMENSION w6j(0:LVMAX,0:LVMAX,0:LMAX,0:LMAX,0:LMAX)
-!
-   INTEGER in , wf , po , mat , pun , zatom
-!
-   CHARACTER*1 name(40) , norb1(5) , norb(5)
-   CHARACTER*50 filen
-   INTEGER :: spag_nextblock_1
-!
-   DATA tiny , small , half/1.D-10 , 0.01D0 , 0.5D0/
-   DATA pi/3.1415926535897932D0/
-   DATA ev/13.606/
-   DATA csmall/274.0746/ , chuge/1.D+08/
-   spag_nextblock_1 = 1
-   SPAG_DispatchLoop_1: DO
-      SELECT CASE (spag_nextblock_1)
-      CASE (1)
+   data tiny , small , half/1.D-10 , 0.01D0 , 0.5D0/
+   data pi/3.1415926535897932D0/
+   data ev/13.606/
+   data csmall/274.0746/ , chuge/1.D+08/
+   SPAG_NextBlock_1 = 1
+   spag_dispatchloop_1: do
+      select case (SPAG_NextBlock_1)
+      case (1)
 !
 ! ********************************************************************
 !
@@ -66,74 +63,74 @@
          mat = 7
          pun = 8
 !
-         OPEN (in,FILE='rcvvmat.in',STATUS='old')
-         OPEN (9,FILE='rcvvmat.err',STATUS='unknown')
-         spag_nextblock_1 = 2
-      CASE (2)
+         open (in,file='rcvvmat.in',status='old')
+         open (9,file='rcvvmat.err',status='unknown')
+         SPAG_NextBlock_1 = 2
+      case (2)
 !
 !
-         READ (in,99001,END=99999) filen
-         OPEN (pun,FILE=filen,STATUS='unknown')
+         read (in,99001,end=99999) filen
+         open (pun,file=filen,status='unknown')
 !
-         READ (in,99001) filen
-         OPEN (po,FILE=filen,STATUS='unknown')
+         read (in,99001) filen
+         open (po,file=filen,status='unknown')
 !
-         READ (in,99001) filen
-         OPEN (wf,FILE=filen,STATUS='unknown')
+         read (in,99001) filen
+         open (wf,file=filen,status='unknown')
 !
-         READ (in,99001) filen
-         OPEN (mat,FILE=filen,STATUS='unknown')
+         read (in,99001) filen
+         open (mat,file=filen,status='unknown')
 !
 !  fill up fields for the relativistic quantumnumbers
 !
-         DO kap = -LMAX - 1 , -1
+         do kap = -lmax - 1 , -1
             l = -kap - 1
             rl(kap) = l
             rlb(kap) = l + 1
             rj(kap) = 2*l + 1
-         ENDDO
-         DO kap = 1 , LMAX
+         enddo
+         do kap = 1 , lmax
             l = kap
             rl(kap) = l
             rlb(kap) = l - 1
             rj(kap) = 2*l - 1
-         ENDDO
+         enddo
 !
 ! read in maximum angular momentum quantumnumber for valence states
 !
-         READ (in,*) lval
-         WRITE (pun,99002) lval
-99002    FORMAT (1x,'LVAL=',t20,i4/)
+         read (in,*) lval
+         write (pun,99002) lval
+99002    format (1x,'LVAL=',t20,i4/)
 !
 ! read in starting energy, increment for the energy panel, number of
 ! energy points for valence band
 ! (with respect to the muffin tin zero)
 ! the energy is measured in ryd
 !
-         READ (in,*) e0 , de , ne
+         read (in,*) e0 , de , ne
 !
 ! check facility for non-relativistic limit
 !
-         READ (in,*) nonrel
-         IF ( nonrel==1 ) THEN
+         read (in,*) nonrel
+         if ( nonrel==1 ) then
             clight = chuge
-         ELSE
+         else
             clight = csmall
-         ENDIF
+         endif
 !
 !  normalization of the valence wavefunctions :
 !                  norm eq 0  within the muffin tin
 !                  norm eq 1  within the wigner-seitz sphere
 !
-         READ (in,*) norm
-         WRITE (pun,99003) norm
-99003    FORMAT (1x,'NORMALIZATION OF VALENCE WF. (0 FOR MT, 1 FOR WS):',i4/)
+         read (in,*) norm
+         write (pun,99003) norm
+99003    format (1x,'NORMALIZATION OF VALENCE WF. (0 FOR MT, 1 FOR WS):',i4/)
 !
 ! read in identifier of core state
 !
-         READ (in,99004) (norb1(i),i=1,5)
+         read (in,99004) (norb1(i),i=1,5)
 !
-         READ (in,*)
+         read (in,*)
 !
 ! read in the name of the species,
 !         the atomic number,
@@ -145,9 +142,9 @@
 !         the value of the muffin tin zero and
 !         the potential in form of r*V(r)
 !
-         READ (po,99004) (name(i),i=1,40)
-         READ (po,*) zatom , x0 , nmt , dx , rws , a0 , zeromt
-         READ (po,*) (v(j),j=1,nmt)
+         read (po,99004) (name(i),i=1,40)
+         read (po,*) zatom , x0 , nmt , dx , rws , a0 , zeromt
+         read (po,*) (v(j),j=1,nmt)
 !
          coef = 2.*zatom/clight
          coef = coef*coef
@@ -159,95 +156,95 @@
          xs(1) = x0
          rs(1) = dexp(x)
          signv = 1.
-         IF ( v(1)>0. ) signv = -1.
+         if ( v(1)>0. ) signv = -1.
          v(1) = signv*v(1)/rs(1) - zeromt
 !
-         DO j = 2 , nmt
+         do j = 2 , nmt
             x = x + dx
             xs(j) = x
             rs(j) = dexp(x)
             v(j) = signv*v(j)/rs(j) - zeromt
-         ENDDO
+         enddo
          rmt = rs(nmt)
 !
          nws = 0
-         DO j = nmt + 1 , NRAD
+         do j = nmt + 1 , nrad
             x = x + dx
             xs(j) = x
             rs(j) = dexp(x)
-            IF ( nws==0 .AND. rws<rs(j) ) nws = j
+            if ( nws==0 .and. rws<rs(j) ) nws = j
             v(j) = 0.D0
-         ENDDO
+         enddo
 !
-         WRITE (*,99004) (name(i),i=1,40)
-         WRITE (pun,99004) (name(i),i=1,40)
-         WRITE (pun,*)
-         WRITE (pun,99005) zatom , x0 , dx , nmt , rmt , nws , rws , zeromt
-99005    FORMAT (1x,' ZATOM =',t20,i4/1x,'    X0 =',t20,f5.1/1x,'    DX =',t20,f10.7/1x,'   NMT =',t20,i4/1x,'   RMT =',t20,       &
+         write (*,99004) (name(i),i=1,40)
+         write (pun,99004) (name(i),i=1,40)
+         write (pun,*)
+         write (pun,99005) zatom , x0 , dx , nmt , rmt , nws , rws , zeromt
+99005    format (1x,' ZATOM =',t20,i4/1x,'    X0 =',t20,f5.1/1x,'    DX =',t20,f10.7/1x,'   NMT =',t20,i4/1x,'   RMT =',t20,       &
                & f10.7/1x,'   NWS =',t20,i4/1x,'   RWS =',t20,f10.7/1x,'ZEROMT =',t20,f5.1//1x,'RADIAL MESH AND POTENTIAL*R'/)
-         WRITE (pun,99006) (rs(j),v(j)*rs(j),j=1,nws)
-99006    FORMAT (4D20.10)
-         DO
+         write (pun,99006) (rs(j),v(j)*rs(j),j=1,nws)
+99006    format (4D20.10)
+         do
 !
 ! read in the core wavefunctions as r*WF(r) and core energies (hartree)
 ! (the same radial mesh is supposed to be used as for the potential)
 !
 !
-            READ (wf,99004) (norb(i),i=1,5)
-            READ (wf,*) ec1
+            read (wf,99004) (norb(i),i=1,5)
+            read (wf,*) ec1
             ec1 = 2.*ec1
-            READ (wf,*) kap1
-            READ (wf,*) nwf
+            read (wf,*) kap1
+            read (wf,*) nwf
 !
-            IF ( nonrel==1 ) THEN
-               DO i = 1 , nwf
-                  READ (wf,*) dummy , gc1(i)
+            if ( nonrel==1 ) then
+               do i = 1 , nwf
+                  read (wf,*) dummy , gc1(i)
                   fc1(i) = 0.D0
-               ENDDO
-            ELSE
-               DO i = 1 , nwf
-                  READ (wf,*) dummy , gc1(i) , fc1(i)
-               ENDDO
-            ENDIF
+               enddo
+            else
+               do i = 1 , nwf
+                  read (wf,*) dummy , gc1(i) , fc1(i)
+               enddo
+            endif
 !
-            IF ( norb(1)==norb1(1) .AND. norb(2)==norb1(2) .AND. norb(3)==norb1(3) ) THEN
+            if ( norb(1)==norb1(1) .and. norb(2)==norb1(2) .and. norb(3)==norb1(3) ) then
 !
-               WRITE (pun,99007) (norb(i),i=1,5) , ec1 , kap1
-99007          FORMAT (//1x,'CORE WAVEFUNCTION'/1x,'ORB. =',t20,5A1/1x,' EC1 =',t20,f12.6/1x,'KAP1 =',t20,i4//)
-               WRITE (pun,99008) (rs(j),gc1(j),fc1(j),j=1,nws)
-99008          FORMAT (3D20.10)
+               write (pun,99007) (norb(i),i=1,5) , ec1 , kap1
+99007          format (//1x,'CORE WAVEFUNCTION'/1x,'ORB. =',t20,5A1/1x,' EC1 =',t20,f12.6/1x,'KAP1 =',t20,i4//)
+               write (pun,99008) (rs(j),gc1(j),fc1(j),j=1,nws)
+99008          format (3D20.10)
 !
-               WRITE (pun,99009)
-99009          FORMAT (//' ****************** END INPUT *******************'//)
+               write (pun,99009)
+99009          format (//' ****************** END INPUT *******************'//)
 !
 !  set up energy panel for valence band :   earr
 !            and       for continuum    :   earr2
 !
                ii = 0
-               DO i = 1 , ne
+               do i = 1 , ne
                   earr(i) = e0 + (i-1)*de
-               ENDDO
+               enddo
                ne2 = 2*ne - 1
                emin2 = 2.*e0 - ec1
-               WRITE (pun,99010) (earr(i),i=1,ne)
-99010          FORMAT (1x,'ENERGY PLANE'//(7x,15F7.2)/)
+               write (pun,99010) (earr(i),i=1,ne)
+99010          format (1x,'ENERGY PLANE'//(7x,15F7.2)/)
 !
-               DO i = 1 , ne2
+               do i = 1 , ne2
                   earr2(i) = emin2 + (i-1)*de
-                  DO j = 1 , ne
+                  do j = 1 , ne
                      jp = i + 1 - j
-                     IF ( jp>=1 .AND. jp<=ne ) THEN
+                     if ( jp>=1 .and. jp<=ne ) then
                         ii = ii + 1
                         irange(j,i) = ii
-                     ELSE
+                     else
                         irange(j,i) = 0
-                     ENDIF
-                  ENDDO
-                  WRITE (pun,99011) earr2(i) , (irange(j,i),j=1,ne)
-99011             FORMAT (f7.2,15(2x,i3,2x))
-               ENDDO
+                     endif
+                  enddo
+                  write (pun,99011) earr2(i) , (irange(j,i),j=1,ne)
+99011             format (f7.2,15(2x,i3,2x))
+               enddo
 !
-               WRITE (pun,*)
+               write (pun,*)
 !
 !  initialize the angular integration coefficients
 !
@@ -256,91 +253,92 @@
                xj1 = j1*half
                jj1 = j1 + 1
                y1 = dsqrt(kap1*kap1-coef)
-               IF ( nonrel==1 ) y1 = dfloat(l1+1)
+               if ( nonrel==1 ) y1 = dfloat(l1+1)
 !
-               CALL wig3j(w3j,pun)
-               CALL wig6j(w6j,xj1,pun)
+               call wig3j(w3j,pun)
+               call wig6j(w6j,xj1,pun)
 !
 !
 !         ************************************
 !         * loop for the energy in continuum *
 !         ************************************
 !
-               DO nei2 = 1 , ne2
-                  WRITE (6,*) nei2
+               do nei2 = 1 , ne2
+                  write (6,*) nei2
 !
 ! compute continuum wavefunctions
 !
                   e2 = earr2(nei2)
 !
                   kout = 0
-                  IF ( nei2==ne ) kout = 1
+                  if ( nei2==ne ) kout = 1
 !
-                  WRITE (pun,99012) e2
-99012             FORMAT (' e2=',f15.5)
-                  IF ( kout==1 ) WRITE (pun,*)
-                  IF ( kout==1 ) WRITE (pun,*) ' continuum wavefunctions'
+                  write (pun,99012) e2
+99012             format (' e2=',f15.5)
+                  if ( kout==1 ) write (pun,*)
+                  if ( kout==1 ) write (pun,*) ' continuum wavefunctions'
 !
-                  CALL wafu(e2,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,gcwf,fcwf,norm,2,nonrel,pun,lval,coef,kout)
+                  call wafu(e2,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,gcwf,fcwf,norm,2,nonrel,pun,lval,coef,kout)
 !
 !
 !         ***************************************
 !         * loop for the energy in valence band *
 !         ***************************************
-                  DO nei = 1 , ne
+!
+                  do nei = 1 , ne
                      neip = nei2 + 1 - nei
-                     IF ( irange(nei,nei2)/=0 ) THEN
+                     if ( irange(nei,nei2)/=0 ) then
 !
                         kout1 = 0
-                        IF ( nonrel==1 .AND. irange(nei,nei2)==ne*ne ) kout1 = 1
+                        if ( nonrel==1 .and. irange(nei,nei2)==ne*ne ) kout1 = 1
 !
 ! compute valence wavefunctions
 !
                         e = earr(nei)
                         ep = earr(neip)
 !
-                        IF ( kout==1 ) WRITE (pun,*)
-                        IF ( kout==1 ) WRITE (pun,*) ' valence wavefunctions'
-                        WRITE (pun,99013) e
-99013                   FORMAT (t20,' e =',f15.5)
+                        if ( kout==1 ) write (pun,*)
+                        if ( kout==1 ) write (pun,*) ' valence wavefunctions'
+                        write (pun,99013) e
+99013                   format (t20,' e =',f15.5)
 !
-                        CALL wafu(e,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,gvwf,fvwf,norm,1,nonrel,pun,lval,coef,kout)
+                        call wafu(e,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,gvwf,fvwf,norm,1,nonrel,pun,lval,coef,kout)
 !
-                        CALL wafu(ep,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,gvwfp,fvwfp,norm,1,nonrel,pun,lval,coef,0)
+                        call wafu(ep,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,gvwfp,fvwfp,norm,1,nonrel,pun,lval,coef,0)
 !
 !         ******************
 !         * loop for kappa *
 !         ******************
 !
-                        DO kap = -lval - 1 , lval
-                           IF ( kap/=0 ) THEN
+                        do kap = -lval - 1 , lval
+                           if ( kap/=0 ) then
                               y = dsqrt(kap*kap-coef)
-                              IF ( nonrel==1 ) y = dfloat(rl(kap)+1)
+                              if ( nonrel==1 ) y = dfloat(rl(kap)+1)
                               jj = rj(kap) + 1
                               l = idint(jj*0.5+small) - 1
                               lkap = rl(kap)
 !
-                              IF ( kout1==1 ) WRITE (pun,*) ' kappa=' , kap
+                              if ( kout1==1 ) write (pun,*) ' kappa=' , kap
 !
 !         *******************
 !         * loop for kappa' *
 !         *******************
 !
-                              DO kapp = -lval - 1 , lval
-                                 IF ( kapp/=0 ) THEN
+                              do kapp = -lval - 1 , lval
+                                 if ( kapp/=0 ) then
                                     yp = dsqrt(kapp*kapp-coef)
-                                    IF ( nonrel==1 ) yp = dfloat(rl(kapp)+1)
+                                    if ( nonrel==1 ) yp = dfloat(rl(kapp)+1)
                                     jjp = rj(kapp) + 1
                                     lp = idint(jjp*0.5+small) - 1
                                     lkapp = rl(kapp)
 !
-                                    IF ( kout1==1 ) WRITE (pun,*) ' kappa"=' , kapp
+                                    if ( kout1==1 ) write (pun,*) ' kappa"=' , kapp
 !
 !  compute coulomb and exchange integrals for non-vanishing angular
 !  integration coefficients
 !
-                                    DO lam = 0 , LMAX
-                                       DO kap2 = -LMAX - 1 , LMAX
+                                    do lam = 0 , lmax
+                                       do kap2 = -lmax - 1 , lmax
                                          idgg(kap2,lam) = 0.
                                          idfg(kap2,lam) = 0.
                                          idgf(kap2,lam) = 0.
@@ -349,47 +347,47 @@
                                          iefg(kap2,lam) = 0.
                                          iegf(kap2,lam) = 0.
                                          ieff(kap2,lam) = 0.
-                                       ENDDO
-                                    ENDDO
+                                       enddo
+                                    enddo
 !
-                                    DO lam = 0 , LMAX
+                                    do lam = 0 , lmax
 !
                                        w1v = w3j(kap1,kap,lam)
                                        w1vp = w3j(kap1,kapp,lam)
 !
-                                       DO kap2 = -LMAX - 1 , LMAX
-                                         IF ( kap2/=0 ) THEN
+                                       do kap2 = -lmax - 1 , lmax
+                                         if ( kap2/=0 ) then
                                          y2 = dsqrt(kap2*kap2-coef)
-                                         IF ( nonrel==1 ) y2 = dfloat(rl(kap2)+1)
+                                         if ( nonrel==1 ) y2 = dfloat(rl(kap2)+1)
 !
                                          wv2 = w3j(kap,kap2,lam)
                                          wvp2 = w3j(kapp,kap2,lam)
 !
-                                         IF ( dabs(w1v*wvp2)>tiny ) THEN
-                                         CALL cei(gc1,gvwf(1,kap),gvwfp(1,kapp),gcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
+                                         if ( dabs(w1v*wvp2)>tiny ) then
+                                         call cei(gc1,gvwf(1,kap),gvwfp(1,kapp),gcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
                                          idgg(kap2,lam) = result
-                                         CALL cei(gc1,gvwf(1,kap),fvwfp(1,kapp),fcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
+                                         call cei(gc1,gvwf(1,kap),fvwfp(1,kapp),fcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
                                          idgf(kap2,lam) = result
-                                         CALL cei(fc1,fvwf(1,kap),gvwfp(1,kapp),gcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
+                                         call cei(fc1,fvwf(1,kap),gvwfp(1,kapp),gcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
                                          idfg(kap2,lam) = result
-                                         CALL cei(fc1,fvwf(1,kap),fvwfp(1,kapp),fcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
+                                         call cei(fc1,fvwf(1,kap),fvwfp(1,kapp),fcwf(1,kap2),rs,nws,lam,y1,y,yp,y2,dx,rws,result)
                                          idff(kap2,lam) = result
-                                         ENDIF
+                                         endif
 !
-                                         IF ( dabs(w1vp*wv2)>tiny ) THEN
-                                         CALL cei(gc1,gvwfp(1,kapp),gvwf(1,kap),gcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
+                                         if ( dabs(w1vp*wv2)>tiny ) then
+                                         call cei(gc1,gvwfp(1,kapp),gvwf(1,kap),gcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
                                          iegg(kap2,lam) = result
-                                         CALL cei(gc1,gvwfp(1,kapp),fvwf(1,kap),fcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
+                                         call cei(gc1,gvwfp(1,kapp),fvwf(1,kap),fcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
                                          iegf(kap2,lam) = result
-                                         CALL cei(fc1,fvwfp(1,kapp),gvwf(1,kap),gcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
+                                         call cei(fc1,fvwfp(1,kapp),gvwf(1,kap),gcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
                                          iefg(kap2,lam) = result
-                                         CALL cei(fc1,fvwfp(1,kapp),fvwf(1,kap),fcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
+                                         call cei(fc1,fvwfp(1,kapp),fvwf(1,kap),fcwf(1,kap2),rs,nws,lam,y1,yp,y,y2,dx,rws,result)
                                          ieff(kap2,lam) = result
-                                         ENDIF
-                                         ENDIF
+                                         endif
+                                         endif
 !
-                                       ENDDO
-                                    ENDDO
+                                       enddo
+                                    enddo
 !
 !
 ! ************* sum up for the direct term
@@ -397,13 +395,13 @@
 !
                                     sigd = 0.
 !
-                                    DO lam = 0 , LMAX
+                                    do lam = 0 , lmax
                                        llam = 2*lam + 1
                                        w1v = w3j(kap1,kap,lam)
                                        w1v = w1v*w1v
 !
-                                       DO kap2 = -LMAX - 1 , LMAX
-                                         IF ( kap2/=0 ) THEN
+                                       do kap2 = -lmax - 1 , lmax
+                                         if ( kap2/=0 ) then
                                          jj2 = rj(kap2) + 1
                                          wvp2 = w3j(kapp,kap2,lam)
                                          wvp2 = wvp2*wvp2
@@ -412,14 +410,14 @@
 !
                                          sigd = sigd + jj1*jj2*w1v*wvp2*sum1*sum1/llam
 !
-                                         IF ( kout1==1 .AND. dabs(sum1)>tiny ) THEN
-                                         WRITE (pun,*) ' nonzero for direct term'
-                                         WRITE (pun,*) lam , kap2 , sum1
-                                         ENDIF
-                                         ENDIF
+                                         if ( kout1==1 .and. dabs(sum1)>tiny ) then
+                                         write (pun,*) ' nonzero for direct term'
+                                         write (pun,*) lam , kap2 , sum1
+                                         endif
+                                         endif
 !
-                                       ENDDO
-                                    ENDDO
+                                       enddo
+                                    enddo
 !
                                     sd(kap,kapp) = sigd
 !
@@ -429,16 +427,16 @@
 !
                                     sigde = 0.
 !
-                                    DO lam = 0 , LMAX
+                                    do lam = 0 , lmax
                                        llam = 2*lam + 1
                                        w1v = w3j(kap1,kap,lam)
 !
-                                       DO lamp = 0 , LMAX
+                                       do lamp = 0 , lmax
                                          llamp = 2*lam + 1
                                          w1vp = w3j(kap1,kapp,lamp)
 !
-                                         DO kap2 = -LMAX - 1 , LMAX
-                                         IF ( kap2/=0 ) THEN
+                                         do kap2 = -lmax - 1 , lmax
+                                         if ( kap2/=0 ) then
                                          jj2 = rj(kap2) + 1
                                          l2 = idint(jj2*0.5+small) - 1
                                          wv2 = w3j(kap,kap2,lamp)
@@ -450,184 +448,209 @@
                                          contr = jj1*jj2*w1v*w1vp*wv2*wvp2*sum1*sum2*w6j(l,lp,l2,lam,lamp)
                                          sigde = sigde + contr
 !
-                                         IF ( kout1==1 .AND. dabs(contr)>tiny ) THEN
-                                         WRITE (pun,*) ' nonzero for cross term'
-                                         WRITE (pun,*) lam , lamp , kap2 , sum1*sum2
-                                         ENDIF
-                                         ENDIF
+                                         if ( kout1==1 .and. dabs(contr)>tiny ) then
+                                         write (pun,*) ' nonzero for cross term'
+                                         write (pun,*) lam , lamp , kap2 , sum1*sum2
+                                         endif
+                                         endif
 !
-                                         ENDDO
-                                       ENDDO
-                                    ENDDO
+                                         enddo
+                                       enddo
+                                    enddo
 !
                                     sde(kap,kapp) = sigde
 !
                                     ssum(kap,kapp,nei) = 2.0*(sigd-sigde)
-                                 ENDIF
+                                 endif
 !
-                              ENDDO
-                           ENDIF
-                        ENDDO
+                              enddo
+                           endif
+                        enddo
 !
 !
 !         ***************************
 !         * end of loop for kappa's *
 !         ***************************
 !
-                        IF ( kout1==1 ) THEN
+                        if ( kout1==1 ) then
 !
-                           WRITE (pun,*)
-                           WRITE (pun,*) ' DIRECT TERM'
-                           DO kap = -lval - 1 , lval
-                              IF ( kap/=0 ) THEN
-                                 WRITE (pun,99014) (kap,kapp,kapp=-lval-1,-1) , (kap,kapp,kapp=1,lval)
-                                 WRITE (pun,99015) (sd(kap,kapp),kapp=-lval-1,-1) , (sd(kap,kapp),kapp=1,lval)
-                              ENDIF
-                           ENDDO
-                           WRITE (pun,*)
-                           WRITE (pun,*) ' CROSS TERM'
-                           DO kap = -lval - 1 , lval
-                              IF ( kap/=0 ) THEN
-                                 WRITE (pun,99014) (kap,kapp,kapp=-lval-1,-1) , (kap,kapp,kapp=1,lval)
-                                 WRITE (pun,99015) (sde(kap,kapp),kapp=-lval-1,-1) , (sde(kap,kapp),kapp=1,lval)
-                              ENDIF
-                           ENDDO
+                           write (pun,*)
+                           write (pun,*) ' DIRECT TERM'
+                           do kap = -lval - 1 , lval
+                              if ( kap/=0 ) then
+                                 write (pun,99014) (kap,kapp,kapp=-lval-1,-1) , (kap,kapp,kapp=1,lval)
+                                 write (pun,99015) (sd(kap,kapp),kapp=-lval-1,-1) , (sd(kap,kapp),kapp=1,lval)
+                              endif
+                           enddo
+                           write (pun,*)
+                           write (pun,*) ' CROSS TERM'
+                           do kap = -lval - 1 , lval
+                              if ( kap/=0 ) then
+                                 write (pun,99014) (kap,kapp,kapp=-lval-1,-1) , (kap,kapp,kapp=1,lval)
+                                 write (pun,99015) (sde(kap,kapp),kapp=-lval-1,-1) , (sde(kap,kapp),kapp=1,lval)
+                              endif
+                           enddo
 !
-                        ENDIF
-                     ENDIF
+                        endif
+                     endif
 !
-                  ENDDO
+                  enddo
 !
 !  ************************************
 !  construct symmetrized cross sections
 !  ************************************
 !
-                  DO i = 1 , ne
+                  do i = 1 , ne
                      ip = nei2 + 1 - i
-                     IF ( irange(i,nei2)/=0 ) THEN
-                        DO kap = -lval - 1 , lval
-                           IF ( kap/=0 ) THEN
+                     if ( irange(i,nei2)/=0 ) then
+                        do kap = -lval - 1 , lval
+                           if ( kap/=0 ) then
                               crsecs(kap,kap,i,nei2) = (ssum(kap,kap,i)+ssum(kap,kap,ip))*0.5
-                              DO kapp = -lval - 1 , kap - 1
-                                 IF ( kapp/=0 ) crsecs(kap,kapp,i,nei2) = ssum(kap,kapp,i) + ssum(kapp,kap,ip)
-                              ENDDO
-                           ENDIF
-                        ENDDO
-                     ENDIF
-                  ENDDO
+                              do kapp = -lval - 1 , kap - 1
+                                 if ( kapp/=0 ) crsecs(kap,kapp,i,nei2) = ssum(kap,kapp,i) + ssum(kapp,kap,ip)
+                              enddo
+                           endif
+                        enddo
+                     endif
+                  enddo
 !
 !
-               ENDDO
+               enddo
 !
 !         ********************************
 !         * end of loop for the energies *
 !         ********************************
 !
-               WRITE (mat,99016) (name(i),i=1,40) , (norb1(i),i=1,5) , ec1 , e0 , de , ne , lval , a0
-99016          FORMAT (1x,'RELATIVISTIC CORE-VALENCE-VALENCE AUGER                MATRIXELEMENTS'/40A1/1x,'CORE STATE'/5A1/1x,     &
+               write (mat,99016) (name(i),i=1,40) , (norb1(i),i=1,5) , ec1 , e0 , de , ne , lval , a0
+99016          format (1x,'RELATIVISTIC CORE-VALENCE-VALENCE AUGER                MATRIXELEMENTS'/40A1/1x,'CORE STATE'/5A1/1x,     &
                       &'ENERGY OF THE CORE STATE'/f12.5/1x,'E0, DE, NE FOR VALENCE BAND'/2F6.2,i5/1x,                              &
                       &'MAXIMAL L QUANTUMNUMBER FOR VALENCE STATES'/i1/1x,'LATTICE CONSTANT'/f10.6/)
 !
-               WRITE (mat,99017) (((kap,kapp),kapp=-lval-1,kap),kap=-lval-1,-1) ,                                                  &
+               write (mat,99017) (((kap,kapp),kapp=-lval-1,kap),kap=-lval-1,-1) ,                                                  &
                                & (((kap,kapp),kapp=-lval-1,-1),((kap,kapp),kapp=1,kap),kap=1,lval)
-99017          FORMAT (1x,'i2',2x,'i',3x,'e2',4x,'ep',4x,'e',2x,28(i6,i3,'    '))
+99017          format (1x,'i2',2x,'i',3x,'e2',4x,'ep',4x,'e',2x,28(i6,i3,'    '))
 !
-               DO i2 = 1 , ne2
-                  DO i = 1 , ne
+               do i2 = 1 , ne2
+                  do i = 1 , ne
                      ip = i2 + 1 - i
-                     IF ( irange(i,i2)/=0 ) THEN
-                        WRITE (mat,99018) i2 , i , earr2(i2) , earr(ip) , earr(i) , ((crsecs(kap,kapp,i,i2),kapp=-lval-1,kap),     &
+                     if ( irange(i,i2)/=0 ) then
+                        write (mat,99018) i2 , i , earr2(i2) , earr(ip) , earr(i) , ((crsecs(kap,kapp,i,i2),kapp=-lval-1,kap),     &
                              & kap=-lval-1,-1) , ((crsecs(kap,kapp,i,i2),kapp=-lval-1,-1),(crsecs(kap,kapp,i,i2),kapp=1,kap),kap=1,&
                              & lval)
-99018                   FORMAT (2I3,3F6.2,28D13.5)
-                     ENDIF
-                  ENDDO
-               ENDDO
+99018                   format (2I3,3F6.2,28D13.5)
+                     endif
+                  enddo
+               enddo
 !
-               CLOSE (pun)
-               CLOSE (po)
-               CLOSE (wf)
-               CLOSE (mat)
-               spag_nextblock_1 = 2
-               CYCLE SPAG_DispatchLoop_1
-            ENDIF
-         ENDDO
-         EXIT SPAG_DispatchLoop_1
-      END SELECT
-   ENDDO SPAG_DispatchLoop_1
+               close (pun)
+               close (po)
+               close (wf)
+               close (mat)
+               SPAG_NextBlock_1 = 2
+               cycle spag_dispatchloop_1
+            endif
+         enddo
+         exit spag_dispatchloop_1
+      end select
+   enddo spag_dispatchloop_1
 !
 !
-99001 FORMAT (a50)
-99004 FORMAT (40A1)
-99014 FORMAT (7(4x,i2,1x,i2,4x))
-99015 FORMAT (7D13.5)
+99001 format (a50)
+99004 format (40A1)
+99014 format (7(4x,i2,1x,i2,4x))
+99015 format (7D13.5)
 !
-99999 END PROGRAM rcvvmat
+99999 end program RCVVMAT
 !
-!*==WAFU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE wafu(En,Rl,Rlb,Rj,V,Rs,X0,Dx,Rmt,Nmt,Rws,Nws,P,Q,Norm,Nval,Nonrel,Pun,Lval,Coef,Kout)
+!
+subroutine wafu(en,rl,rlb,rj,v,rs,x0,dx,rmt,nmt,rws,nws,p,q,norm,nval,nonrel,pun,lval,coef,kout)
 !================================================
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a1 , b1 , chuge , clight , Coef , cose , csmall , Dx , ekappa , En , eta , fb , fb1 , fn , fn1 , P , Q , qint , r , ratfg
-   REAL*8 ratx , Rmt , rr , Rs , Rws , sign , sine , sintg , sk , tane , tanx , V , vint , X0 , x1 , x2 , yk , yk2
-   INTEGER i , kap , Kout , l , lact , lb , Lval , Nmt , Nonrel , Norm , NRAD , Nval , Nws
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+   include 'l.par'
 !
-   PARAMETER (NRAD=250)
-   INCLUDE 'l.par'
+! PARAMETER definitions rewritten by SPAG
 !
-   DIMENSION V(NRAD) , Rs(NRAD)
+   integer , parameter :: NRAD = 250
 !
-   DIMENSION P(NRAD,-LMAX-1:LMAX) , Q(NRAD,-LMAX-1:LMAX)
-   DIMENSION rr(NRAD) , vint(-LMAX-1:LMAX) , eta(-LMAX-1:LMAX)
-   DIMENSION tanx(-LMAX-1:LMAX) , ratx(-LMAX-1:LMAX)
-   DIMENSION fb(0:LMAX+1) , fn(0:LMAX+1) , fb1(0:LMAX+1) , fn1(0:LMAX+1)
+! Dummy argument declarations rewritten by SPAG
 !
-   INTEGER Rl(-LMAX-1:LMAX) , Rlb(-LMAX-1:LMAX) , Rj(-LMAX-1:LMAX)
-   INTEGER Pun
+   real(REAL64) :: EN
+   integer , intent(in) , dimension(-lmax-1:lmax) :: RL
+   integer , intent(in) , dimension(-lmax-1:lmax) :: RLB
+   integer , dimension(-lmax-1:lmax) :: RJ
+   real(REAL64) , dimension(nrad) :: V
+   real(REAL64) , dimension(nrad) :: RS
+   real(REAL64) :: X0
+   real(REAL64) :: DX
+   real(REAL64) :: RMT
+   integer :: NMT
+   real(REAL64) , intent(in) :: RWS
+   integer :: NWS
+   real(REAL64) , intent(inout) , dimension(nrad,-lmax-1:lmax) :: P
+   real(REAL64) , intent(inout) , dimension(nrad,-lmax-1:lmax) :: Q
+   integer , intent(in) :: NORM
+   integer , intent(in) :: NVAL
+   integer :: NONREL
+   integer , intent(in) :: PUN
+   integer , intent(in) :: LVAL
+   real(REAL64) , intent(in) :: COEF
+   integer , intent(in) :: KOUT
 !
-   DATA csmall/274.0746/ , chuge/1.D+08/
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: A1 , B1 , CLIGHT , COSE , EKAPPA , QINT , R , RATFG , SIGN , SINE , SK , TANE , X1 , X2 , YK , YK2
+   real(REAL64) , save :: CHUGE , CSMALL
+   real(REAL64) , dimension(-lmax-1:lmax) :: ETA , RATX , TANX , VINT
+   real(REAL64) , dimension(0:lmax+1) :: FB , FB1 , FN , FN1
+   integer :: I , KAP , L , LACT , LB
+   real(REAL64) , dimension(nrad) :: RR
+   real(REAL64) , external :: SINTG
+   external COMDIR , SBF1
+!
+! End of declarations rewritten by SPAG
+!
+   data csmall/274.0746/ , chuge/1.D+08/
 !
 !
-   IF ( Nonrel==1 ) THEN
+   if ( nonrel==1 ) then
       clight = chuge
-   ELSE
+   else
       clight = csmall
-   ENDIF
+   endif
 !
-   IF ( En>0 ) THEN
+   if ( en>0 ) then
       sign = 1.
-      ekappa = dsqrt(En)
-   ELSE
+      ekappa = dsqrt(en)
+   else
       sign = -1.
-      ekappa = dsqrt(-En)
-   ENDIF
+      ekappa = dsqrt(-en)
+   endif
 !
-   CALL sbf1(En,Rmt,fb,fn)
+   call sbf1(en,rmt,fb,fn)
 !
-   IF ( Nval==1 ) lact = Lval
-   IF ( Nval==2 ) lact = LMAX
+   if ( nval==1 ) lact = lval
+   if ( nval==2 ) lact = lmax
 !
-   DO kap = -lact - 1 , lact
-      IF ( kap/=0 ) THEN
+   do kap = -lact - 1 , lact
+      if ( kap/=0 ) then
 !
-         l = Rl(kap)
-         lb = Rlb(kap)
-         IF ( kap>0 ) sk = ekappa
-         IF ( kap<0 ) sk = -sign*ekappa
-         yk = dsqrt(kap*kap-Coef)
+         l = rl(kap)
+         lb = rlb(kap)
+         if ( kap>0 ) sk = ekappa
+         if ( kap<0 ) sk = -sign*ekappa
+         yk = dsqrt(kap*kap-coef)
 !
-         IF ( Nonrel==1 ) THEN
+         if ( nonrel==1 ) then
             yk = dfloat(l+1)
             lb = l + 1
             sk = -sign*ekappa
-         ENDIF
+         endif
 !
          yk2 = yk + yk
 !
-         CALL comdir(En,kap,V,Nmt,Nws,Dx,X0,Q(1,kap),P(1,kap),ratfg,Nonrel)
+         call comdir(en,kap,v,nmt,nws,dx,x0,q(1,kap),p(1,kap),ratfg,nonrel)
 !
          tane = (ratfg*fb(l)-sk*fb(lb))/(ratfg*fn(l)-sk*fn(lb))
          ratx(kap) = ratfg
@@ -635,15 +658,15 @@ SUBROUTINE wafu(En,Rl,Rlb,Rj,V,Rs,X0,Dx,Rmt,Nmt,Rws,Nws,P,Q,Norm,Nval,Nonrel,Pun
 !
 ! valence or continuum normalization
 !
-         IF ( Nval==1 ) THEN
-            a1 = sk*ekappa*(fn(lb)-fb(lb)/tane)*Rmt/Q(Nmt,kap)/clight
-            b1 = ekappa*(fn(l)-fb(l)/tane)*Rmt/P(Nmt,kap)
-         ELSE
+         if ( nval==1 ) then
+            a1 = sk*ekappa*(fn(lb)-fb(lb)/tane)*rmt/q(nmt,kap)/clight
+            b1 = ekappa*(fn(l)-fb(l)/tane)*rmt/p(nmt,kap)
+         else
             eta(kap) = datan(tane)
             cose = dcos(eta(kap))
             sine = dsin(eta(kap))
-            a1 = sk*(cose*fb(lb)-sine*fn(lb))*Rmt/Q(Nmt,kap)/clight
-            b1 = (cose*fb(l)-sine*fn(l))*Rmt/P(Nmt,kap)
+            a1 = sk*(cose*fb(lb)-sine*fn(lb))*rmt/q(nmt,kap)/clight
+            b1 = (cose*fb(l)-sine*fn(l))*rmt/p(nmt,kap)
 !     if(b1.lt.0.) then
 !       if(eta(kap).gt.pi) then
 !       eta(kap)=eta(kap)-pi
@@ -652,292 +675,339 @@ SUBROUTINE wafu(En,Rl,Rlb,Rj,V,Rs,X0,Dx,Rmt,Nmt,Rws,Nws,P,Q,Norm,Nval,Nonrel,Pun
 !       endif
 !       goto 310
 !     endif
-         ENDIF
+         endif
 !
 !
-         DO i = 1 , Nmt
-            P(i,kap) = P(i,kap)*b1
-            Q(i,kap) = Q(i,kap)*a1
-            rr(i) = P(i,kap)*P(i,kap) + Q(i,kap)*Q(i,kap)
-         ENDDO
+         do i = 1 , nmt
+            p(i,kap) = p(i,kap)*b1
+            q(i,kap) = q(i,kap)*a1
+            rr(i) = p(i,kap)*p(i,kap) + q(i,kap)*q(i,kap)
+         enddo
 !
 !
 !  set up the wavefunctions beyond the muffin tin radius
 !
-         DO i = Nmt + 1 , Nws + 1
-            r = Rs(i)
-            CALL sbf1(En,r,fb1,fn1)
-            IF ( Nval==1 ) THEN
-               Q(i,kap) = sk*ekappa*(fn1(lb)-fb1(lb)/tane)*r/clight
-               P(i,kap) = ekappa*(fn1(l)-fb1(l)/tane)*r
-            ELSE
-               Q(i,kap) = sk*(cose*fb1(lb)-sine*fn1(lb))*r/clight
-               P(i,kap) = (cose*fb1(l)-sine*fn1(l))*r
-            ENDIF
-            rr(i) = P(i,kap)*P(i,kap) + Q(i,kap)*Q(i,kap)
-         ENDDO
+         do i = nmt + 1 , nws + 1
+            r = rs(i)
+            call sbf1(en,r,fb1,fn1)
+            if ( nval==1 ) then
+               q(i,kap) = sk*ekappa*(fn1(lb)-fb1(lb)/tane)*r/clight
+               p(i,kap) = ekappa*(fn1(l)-fb1(l)/tane)*r
+            else
+               q(i,kap) = sk*(cose*fb1(lb)-sine*fn1(lb))*r/clight
+               p(i,kap) = (cose*fb1(l)-sine*fn1(l))*r
+            endif
+            rr(i) = p(i,kap)*p(i,kap) + q(i,kap)*q(i,kap)
+         enddo
 !
 !
-         IF ( Nval/=2 ) THEN
+         if ( nval/=2 ) then
 !
 ! normalize valence wavefuntions according to norm
 !
-            IF ( Norm==0 ) THEN
-               vint(kap) = sintg(yk2,rr,Rs,Dx,Nmt)
-            ELSE
-               x1 = sintg(yk2,rr,Rs,Dx,Nws-1)
-               x2 = sintg(yk2,rr,Rs,Dx,Nws)
-               vint(kap) = x1 + (x2-x1)*(Rws-Rs(Nws-1))/(Rs(Nws)-Rs(Nws-1))
-            ENDIF
+            if ( norm==0 ) then
+               vint(kap) = sintg(yk2,rr,rs,dx,nmt)
+            else
+               x1 = sintg(yk2,rr,rs,dx,nws-1)
+               x2 = sintg(yk2,rr,rs,dx,nws)
+               vint(kap) = x1 + (x2-x1)*(rws-rs(nws-1))/(rs(nws)-rs(nws-1))
+            endif
             qint = dsqrt(1./vint(kap))
-            DO i = 1 , NRAD
-               P(i,kap) = P(i,kap)*qint
-               Q(i,kap) = Q(i,kap)*qint
-            ENDDO
-         ENDIF
-      ENDIF
+            do i = 1 , nrad
+               p(i,kap) = p(i,kap)*qint
+               q(i,kap) = q(i,kap)*qint
+            enddo
+         endif
+      endif
 !
 !
-   ENDDO
+   enddo
 !
 !
-   IF ( Kout==1 ) THEN
+   if ( kout==1 ) then
 !
-      IF ( Nval==1 ) THEN
+      if ( nval==1 ) then
 !
-         WRITE (Pun,99001)
-         WRITE (Pun,99003) (kap,kap=-lact-1,-1) , (kap,kap=1,lact)
-         WRITE (Pun,99004) (ratx(kap),kap=-lact-1,-1) , (ratx(kap),kap=1,lact)
-         WRITE (Pun,99002)
-99002    FORMAT (/1x,'TANGENT PHASESHIFTS'/)
-         WRITE (Pun,99003) (kap,kap=-lact-1,-1) , (kap,kap=1,lact)
-         WRITE (Pun,99004) (tanx(kap),kap=-lact-1,-1) , (tanx(kap),kap=1,lact)
+         write (pun,99001)
+         write (pun,99003) (kap,kap=-lact-1,-1) , (kap,kap=1,lact)
+         write (pun,99004) (ratx(kap),kap=-lact-1,-1) , (ratx(kap),kap=1,lact)
+         write (pun,99002)
+99002    format (/1x,'TANGENT PHASESHIFTS'/)
+         write (pun,99003) (kap,kap=-lact-1,-1) , (kap,kap=1,lact)
+         write (pun,99004) (tanx(kap),kap=-lact-1,-1) , (tanx(kap),kap=1,lact)
 !
-      ELSE
+      else
 !
-         WRITE (Pun,99001)
-         WRITE (Pun,99003) (kap,kap=-1,-lact-1,-1)
-         WRITE (Pun,99004) (ratx(kap),kap=-1,-lact-1,-1)
-         WRITE (Pun,99006) (kap,kap=1,lact)
-         WRITE (Pun,99007) (ratx(kap),kap=1,lact)
-         WRITE (Pun,99005)
-99005    FORMAT (/1x,'PHASESHIFTS'/)
-         WRITE (Pun,99003) (kap,kap=-1,-lact-1,-1)
-         WRITE (Pun,99004) (eta(kap),kap=-1,-lact-1,-1)
-         WRITE (Pun,99006) (kap,kap=1,lact)
-         WRITE (Pun,99007) (eta(kap),kap=1,lact)
+         write (pun,99001)
+         write (pun,99003) (kap,kap=-1,-lact-1,-1)
+         write (pun,99004) (ratx(kap),kap=-1,-lact-1,-1)
+         write (pun,99006) (kap,kap=1,lact)
+         write (pun,99007) (ratx(kap),kap=1,lact)
+         write (pun,99005)
+99005    format (/1x,'PHASESHIFTS'/)
+         write (pun,99003) (kap,kap=-1,-lact-1,-1)
+         write (pun,99004) (eta(kap),kap=-1,-lact-1,-1)
+         write (pun,99006) (kap,kap=1,lact)
+         write (pun,99007) (eta(kap),kap=1,lact)
 !
-      ENDIF
+      endif
 !
-   ENDIF
-99001 FORMAT (/1x,'CF/G RATIO'/)
-99003 FORMAT (2x,12(5x,i3,5x))
-99004 FORMAT (2x,12D13.5)
-99006 FORMAT (15x,11(6x,i2,5x))
-99007 FORMAT (15x,11D13.5)
+   endif
+99001 format (/1x,'CF/G RATIO'/)
+99003 format (2x,12(5x,i3,5x))
+99004 format (2x,12D13.5)
+99006 format (15x,11(6x,i2,5x))
+99007 format (15x,11D13.5)
 !
-END SUBROUTINE wafu
+end subroutine WAFU
 !
-!*==COMDIR.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE comdir(E1,Kappa,Za,Nrc,Nnk,Dx,X0,Q,P,Ratfg,Nonrel)
+!
+subroutine comdir(e1,kappa,za,nrc,nnk,dx,x0,q,p,ratfg,nonrel)
 !======================================================================
 !
 !   integration of relativistic radial dirac equations by milne
 !   method and calculation of ratio cf/g
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 bgc , bgx , c , chuge , cin , csmall , Dx , e , E1 , hoc , P , pp , Q , qp , Ratfg , stval , sxk , sxm , t , tc
-   REAL*8 test , u , uc , unp , unp2 , wc , wnp , wnp2 , x , X0 , xc , xk , z2 , Za
-   INTEGER i , ik , jri , kap , Kappa , lkap , n , nit , Nnk , Nonrel , NRAD , Nrc
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
 !
-   PARAMETER (NRAD=250)
+! PARAMETER definitions rewritten by SPAG
 !
-   DIMENSION bgx(NRAD) , sxk(4) , sxm(4) , P(NRAD) , Q(NRAD) , pp(NRAD) , qp(NRAD) , Za(NRAD)
-   INTEGER pun
-   INTEGER :: spag_nextblock_1
-   DATA test/1.E+05/ , pun/99/
-   DATA csmall/274.0746/ , chuge/1.D+16/
-   spag_nextblock_1 = 1
-   SPAG_DispatchLoop_1: DO
-      SELECT CASE (spag_nextblock_1)
-      CASE (1)
+   integer , parameter :: NRAD = 250
 !
-         DO i = 1 , Nnk
-            bgx(i) = Za(i)
-         ENDDO
-         kap = Kappa
+! Dummy argument declarations rewritten by SPAG
+!
+   real(REAL64) , intent(in) :: E1
+   integer , intent(in) :: KAPPA
+   real(REAL64) , intent(in) , dimension(nrad) :: ZA
+   integer , intent(in) :: NRC
+   integer , intent(in) :: NNK
+   real(REAL64) , intent(in) :: DX
+   real(REAL64) , intent(in) :: X0
+   real(REAL64) , intent(inout) , dimension(nrad) :: Q
+   real(REAL64) , intent(inout) , dimension(nrad) :: P
+   real(REAL64) , intent(out) :: RATFG
+   integer , intent(in) :: NONREL
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: BGC , C , CIN , E , HOC , STVAL , T , TC , U , UC , UNP , UNP2 , WC , WNP , WNP2 , X , XC , XK , Z2
+   real(REAL64) , dimension(nrad) :: BGX , PP , QP
+   real(REAL64) , save :: CHUGE , CSMALL , TEST
+   integer :: I , IK , JRI , KAP , LKAP , N , NIT
+   integer , save :: PUN
+   real(REAL64) , dimension(4) :: SXK , SXM
+!
+! End of declarations rewritten by SPAG
+!
+   integer :: SPAG_NextBlock_1
+   data test/1.E+05/ , pun/99/
+   data csmall/274.0746/ , chuge/1.D+16/
+   SPAG_NextBlock_1 = 1
+   spag_dispatchloop_1: do
+      select case (SPAG_NextBlock_1)
+      case (1)
+!
+         do i = 1 , nnk
+            bgx(i) = za(i)
+         enddo
+         kap = kappa
          xk = dfloat(kap)
-         jri = Nrc
-         e = E1
-         stval = X0
+         jri = nrc
+         e = e1
+         stval = x0
          z2 = -bgx(1)*exp(stval)
          tc = dexp(stval)
 !
 !
-         IF ( Nonrel==1 ) THEN
-            IF ( kap<0 ) lkap = -kap - 1
-            IF ( kap>0 ) lkap = kap
+         if ( nonrel==1 ) then
+            if ( kap<0 ) lkap = -kap - 1
+            if ( kap>0 ) lkap = kap
             kap = -lkap - 1
             xk = dfloat(kap)
             u = -0.5*z2/(lkap+1.0)
-            P(1) = 1.E-20
-            Q(1) = u*1.E-20
+            p(1) = 1.E-20
+            q(1) = u*1.E-20
 !
-         ELSE
+         else
 !
             c = csmall
             cin = 1./(c*c)
 !
             hoc = z2/c
-            IF ( dabs(hoc/xk)<=0.05 ) THEN
+            if ( dabs(hoc/xk)<=0.05 ) then
                u = (xk+dabs(xk))/hoc - 0.5*hoc/dabs(xk)
-            ELSE
+            else
                u = (xk+dsqrt(xk*xk-hoc*hoc))/hoc
-            ENDIF
-            P(1) = 1.0E-20
-            Q(1) = c*u*1.0E-20
+            endif
+            p(1) = 1.0E-20
+            q(1) = c*u*1.0E-20
 !
-         ENDIF
-!
+         endif
 !
 !     eq. 4.92
-!
-         IF ( Nonrel/=1 ) THEN
-            pp(1) = tc*(cin*(e-bgx(1))+1.)*Q(1) - xk*P(1)
-         ELSE
-            pp(1) = tc*Q(1) - xk*P(1)
-         ENDIF
-!
+         if ( nonrel/=1 ) then
+            pp(1) = tc*(cin*(e-bgx(1))+1.)*q(1) - xk*p(1)
+         else
+            pp(1) = tc*q(1) - xk*p(1)
+         endif
 !     eq. 4.90
 !
-         qp(1) = xk*Q(1) - tc*(e-bgx(1))*P(1)
+         qp(1) = xk*q(1) - tc*(e-bgx(1))*p(1)
 !
 !     eq. 4.91
 !     runge-kutta method
 !
          x = stval
          n = 1
-         spag_nextblock_1 = 2
-      CASE (2)
+         SPAG_NextBlock_1 = 2
+      case (2)
          ik = 0
          xc = x
          bgc = bgx(n)
-         wc = Q(n)
-         uc = P(n)
-         DO
+         wc = q(n)
+         uc = p(n)
+         do
             ik = ik + 1
             t = dexp(xc)
 !
-            IF ( Nonrel/=1 ) THEN
-               sxk(ik) = Dx*(-xk*uc+t*wc*(cin*(e-bgc)+1.))
-            ELSE
-               sxk(ik) = Dx*(-xk*uc+t*wc)
-            ENDIF
+            if ( nonrel/=1 ) then
+               sxk(ik) = dx*(-xk*uc+t*wc*(cin*(e-bgc)+1.))
+            else
+               sxk(ik) = dx*(-xk*uc+t*wc)
+            endif
 !
-            sxm(ik) = Dx*(xk*wc-t*(e-bgc)*uc)
-            IF ( ik==2 ) THEN
+            sxm(ik) = dx*(xk*wc-t*(e-bgc)*uc)
+            if ( ik==2 ) then
                uc = uc + 0.5*(sxk(2)-sxk(1))
                wc = wc + 0.5*(sxm(2)-sxm(1))
-            ELSEIF ( ik==3 ) THEN
-               xc = xc + 0.5*Dx
+            elseif ( ik==3 ) then
+               xc = xc + 0.5*dx
                uc = uc + sxk(3) - 0.5*sxk(2)
                wc = wc + sxm(3) - 0.5*sxm(2)
                bgc = bgx(n+1)
-            ELSEIF ( ik==4 ) THEN
-               Q(n+1) = Q(n) + (sxm(1)+2.0*sxm(2)+2.0*sxm(3)+sxm(4))/6.0
-               P(n+1) = P(n) + (sxk(1)+2.0*sxk(2)+2.0*sxk(3)+sxk(4))/6.0
+            elseif ( ik==4 ) then
+               q(n+1) = q(n) + (sxm(1)+2.0*sxm(2)+2.0*sxm(3)+sxm(4))/6.0
+               p(n+1) = p(n) + (sxk(1)+2.0*sxk(2)+2.0*sxk(3)+sxk(4))/6.0
 !
-               IF ( Nonrel/=1 ) THEN
-                  pp(n+1) = t*Q(n+1)*(cin*(e-bgc)+1.0) - xk*P(n+1)
-               ELSE
-                  pp(n+1) = t*Q(n+1) - xk*P(n+1)
-               ENDIF
+               if ( nonrel/=1 ) then
+                  pp(n+1) = t*q(n+1)*(cin*(e-bgc)+1.0) - xk*p(n+1)
+               else
+                  pp(n+1) = t*q(n+1) - xk*p(n+1)
+               endif
 !
-               qp(n+1) = xk*Q(n+1) - t*(e-bgc)*P(n+1)
-               x = x + Dx
+               qp(n+1) = xk*q(n+1) - t*(e-bgc)*p(n+1)
+               x = x + dx
                n = n + 1
-               IF ( n>=6 ) THEN
-                  spag_nextblock_1 = 3
-                  CYCLE SPAG_DispatchLoop_1
-               ENDIF
-               spag_nextblock_1 = 2
-               CYCLE SPAG_DispatchLoop_1
-            ELSE
-               xc = xc + 0.5*Dx
+               if ( n>=6 ) then
+                  SPAG_NextBlock_1 = 3
+                  cycle spag_dispatchloop_1
+               endif
+               SPAG_NextBlock_1 = 2
+               cycle spag_dispatchloop_1
+            else
+               xc = xc + 0.5*dx
                uc = uc + 0.5*sxk(1)
                wc = wc + 0.5*sxm(1)
                bgc = 0.5*(bgc+bgx(n+1))
-            ENDIF
-         ENDDO
-         spag_nextblock_1 = 3
-      CASE (3)
+            endif
+         enddo
+         SPAG_NextBlock_1 = 3
+      case (3)
 !
 !     milne method
 !
-         x = x + Dx
+         x = x + dx
          t = dexp(x)
 !
-         unp = P(n-5) + 0.3*Dx*(11.*pp(n)-14.*pp(n-1)+26.*pp(n-2)-14.*pp(n-3)+11.0*pp(n-4))
+         unp = p(n-5) + 0.3*dx*(11.*pp(n)-14.*pp(n-1)+26.*pp(n-2)-14.*pp(n-3)+11.0*pp(n-4))
 !
-         wnp = Q(n-5) + 0.3*Dx*(11.0*qp(n)-14.0*qp(n-1)+26.0*qp(n-2)-14.0*qp(n-3)+11.0*qp(n-4))
+         wnp = q(n-5) + 0.3*dx*(11.0*qp(n)-14.0*qp(n-1)+26.0*qp(n-2)-14.0*qp(n-3)+11.0*qp(n-4))
          nit = 0
-         spag_nextblock_1 = 4
-      CASE (4)
+         SPAG_NextBlock_1 = 4
+      case (4)
 !
 !
-         IF ( Nonrel/=1 ) THEN
+         if ( nonrel/=1 ) then
             pp(n+1) = t*(cin*(e-bgx(n+1))+1.0)*wnp - xk*unp
-         ELSE
+         else
             pp(n+1) = t*wnp - xk*unp
-         ENDIF
+         endif
 !
          qp(n+1) = xk*wnp - t*(e-bgx(n+1))*unp
 !
-         unp2 = P(n-3) + (7.0*pp(n+1)+32.0*pp(n)+12.0*pp(n-1)+32.0*pp(n-2)+7.0*pp(n-3))*2.0*Dx/45.0
+         unp2 = p(n-3) + (7.0*pp(n+1)+32.0*pp(n)+12.0*pp(n-1)+32.0*pp(n-2)+7.0*pp(n-3))*2.0*dx/45.0
 !
-         wnp2 = Q(n-3) + (7.0*qp(n+1)+32.0*qp(n)+12.0*qp(n-1)+32.0*qp(n-2)+7.0*qp(n-3))*2.0*Dx/45.0
+         wnp2 = q(n-3) + (7.0*qp(n+1)+32.0*qp(n)+12.0*qp(n-1)+32.0*qp(n-2)+7.0*qp(n-3))*2.0*dx/45.0
 !
-         IF ( dabs(test*(unp2-unp))<=dabs(unp2) ) THEN
-            IF ( dabs(test*(wnp2-wnp))<=dabs(wnp2) ) THEN
-               spag_nextblock_1 = 5
-               CYCLE SPAG_DispatchLoop_1
-            ENDIF
-         ENDIF
+         if ( dabs(test*(unp2-unp))<=dabs(unp2) ) then
+            if ( dabs(test*(wnp2-wnp))<=dabs(wnp2) ) then
+               SPAG_NextBlock_1 = 5
+               cycle spag_dispatchloop_1
+            endif
+         endif
 !
-         IF ( nit/=5 ) THEN
+         if ( nit/=5 ) then
             nit = nit + 1
             wnp = wnp2
             unp = unp2
-            spag_nextblock_1 = 4
-            CYCLE SPAG_DispatchLoop_1
-         ENDIF
-         spag_nextblock_1 = 5
-      CASE (5)
+            SPAG_NextBlock_1 = 4
+            cycle spag_dispatchloop_1
+         endif
+         SPAG_NextBlock_1 = 5
+      case (5)
 !
-         Q(n+1) = wnp2
-         P(n+1) = unp2
+         q(n+1) = wnp2
+         p(n+1) = unp2
          n = n + 1
-         IF ( n<Nnk ) THEN
-            spag_nextblock_1 = 3
-            CYCLE SPAG_DispatchLoop_1
-         ENDIF
-         Ratfg = Q(jri)/P(jri)
-         EXIT SPAG_DispatchLoop_1
-      END SELECT
-   ENDDO SPAG_DispatchLoop_1
+         if ( n<nnk ) then
+            SPAG_NextBlock_1 = 3
+            cycle spag_dispatchloop_1
+         endif
+         ratfg = q(jri)/p(jri)
+         exit spag_dispatchloop_1
+      end select
+   enddo spag_dispatchloop_1
 !
-END SUBROUTINE comdir
+end subroutine COMDIR
 !
-!*==CEI.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE cei(F2,F4,F1,F3,R,N,Lambda,L2,L4,L1,L3,Dx,Rws,Result)
+!
+subroutine cei(f2,f4,f1,f3,r,n,lambda,l2,l4,l1,l3,dx,rws,result)
 ! ====================================================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 arg1 , arg2 , arg3 , arg4 , Dx , F1 , F2 , F3 , F4 , R , Result , rl , rmlp1 , Rws , sintg
-   INTEGER i , Lambda , m , N , NDIM , NRAD
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! PARAMETER definitions rewritten by SPAG
+!
+   integer , parameter :: NRAD = 250 , NDIM = nrad
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   real(REAL64) , intent(in) , dimension(1) :: F2
+   real(REAL64) , intent(in) , dimension(1) :: F4
+   real(REAL64) , intent(in) , dimension(1) :: F1
+   real(REAL64) , intent(in) , dimension(1) :: F3
+   real(REAL64) , dimension(1) :: R
+   integer , intent(in) :: N
+   integer , intent(in) :: LAMBDA
+   real(REAL64) , intent(in) :: L2
+   real(REAL64) , intent(in) :: L4
+   real(REAL64) , intent(in) :: L1
+   real(REAL64) , intent(in) :: L3
+   real(REAL64) :: DX
+   real(REAL64) :: RWS
+   real(REAL64) , intent(out) :: RESULT
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) , dimension(ndim) :: ARG1 , ARG2 , ARG3 , ARG4 , RL , RMLP1
+   integer :: I , M
+   real(REAL64) :: LL
+   real(REAL64) , external :: SINTG
+   external DINTG
+!
+! End of declarations rewritten by SPAG
+!
 !
 !     calculate coulomb and exchange integrals
 !     (not too) closely following zare, wood and company
@@ -946,212 +1016,253 @@ SUBROUTINE cei(F2,F4,F1,F3,R,N,Lambda,L2,L4,L1,L3,Dx,Rws,Result)
 !
 !  result = int( int( f2(R) *f4(R) * R_<**lambda/R_>**(lambda+1) *
 !                     f1(R')*f3(R') ))
+   m = n
+   do i = 1 , m
+      rl(i) = r(i)**lambda
+      rmlp1(i) = 1./(rl(i)*r(i))
+      arg1(i) = f2(i)*f4(i)*rl(i)
+   enddo
 !
-   PARAMETER (NRAD=250,NDIM=NRAD)
-!
-   DIMENSION rl(NDIM) , rmlp1(NDIM)
-   DIMENSION arg1(NDIM) , arg2(NDIM) , arg3(NDIM) , arg4(NDIM)
-!
-   DIMENSION F1(1) , F2(1) , F3(1) , F4(1) , R(1)
-!
-   REAL*8 L1 , L2 , L3 , L4 , ll
-!
-   m = N
-   DO i = 1 , m
-      rl(i) = R(i)**Lambda
-      rmlp1(i) = 1./(rl(i)*R(i))
-      arg1(i) = F2(i)*F4(i)*rl(i)
-   ENDDO
-!
-   ll = L2 + L4 + Lambda
-   CALL dintg(ll,1,arg1,arg2,R,Dx,m,Rws)
+   ll = l2 + l4 + lambda
+   call dintg(ll,1,arg1,arg2,r,dx,m,rws)
 ! arg2 contains int from r=0 to r(i)
    ll = ll + 1
 !
-   DO i = 1 , m
-      arg2(i) = arg2(i)*F1(i)*F3(i)*rmlp1(i)
-   ENDDO
+   do i = 1 , m
+      arg2(i) = arg2(i)*f1(i)*f3(i)*rmlp1(i)
+   enddo
 !
-   ll = ll + L1 + L3 - Lambda - 1
+   ll = ll + l1 + l3 - lambda - 1
 !
-   DO i = 1 , m
-      arg3(i) = F2(i)*F4(i)*rmlp1(i)
-   ENDDO
+   do i = 1 , m
+      arg3(i) = f2(i)*f4(i)*rmlp1(i)
+   enddo
 !
-   ll = L2 + L4 - Lambda - 1
-   CALL dintg(ll,-1,arg3,arg4,R,Dx,m,Rws)
+   ll = l2 + l4 - lambda - 1
+   call dintg(ll,-1,arg3,arg4,r,dx,m,rws)
 ! arg4 contains int. from r(i) to rws
    ll = ll + 1
 !
-   DO i = 1 , m
-      arg4(i) = arg4(i)*F1(i)*F3(i)*rl(i)
-   ENDDO
+   do i = 1 , m
+      arg4(i) = arg4(i)*f1(i)*f3(i)*rl(i)
+   enddo
 !
-   ll = ll + L1 + L3 + Lambda
-   DO i = 1 , m
+   ll = ll + l1 + l3 + lambda
+   do i = 1 , m
       arg2(i) = arg2(i) + arg4(i)
-   ENDDO
+   enddo
 ! ll = l1+l2+l3+l4 for both arg2 and arg4
-   Result = sintg(ll,arg2,R,Dx,m)
+   result = sintg(ll,arg2,r,dx,m)
 !
-END SUBROUTINE cei
+end subroutine CEI
 !
-!*==SINTG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION sintg(Ll,Fct,R,Dx,N)
+!
+function sintg(ll,fct,r,dx,n)
 ! ========================================
 !
 ! integration of fct over r using simpson integration
 ! r(i)=r0*exp(dx*(i-1))
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 Dx , fact , Fct , R , rll , sum , tiny , x0 , x1 , x2
-   INTEGER i , N
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
 !
-   DIMENSION Fct(1) , R(1)
-   REAL*8 Ll
+! Function and Dummy argument declarations rewritten by SPAG
 !
-   DATA tiny/1.0D-20/
+   real(REAL64) :: SINTG
+   real(REAL64) , intent(in) :: LL
+   real(REAL64) , intent(in) , dimension(1) :: FCT
+   real(REAL64) , intent(in) , dimension(1) :: R
+   real(REAL64) , intent(in) :: DX
+   integer , intent(in) :: N
 !
-   IF ( Ll+1.0<=tiny ) THEN
-      WRITE (9,*) ' sintg: ll+1=' , Ll + 1
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: FACT , RLL , SUM , X0 , X1 , X2
+   integer :: I
+   real(REAL64) , save :: TINY
+!
+! End of declarations rewritten by SPAG
+!
+!
+!
+   data tiny/1.0D-20/
+!
+   if ( ll+1.0<=tiny ) then
+      write (9,*) ' sintg: ll+1=' , ll + 1
       sum = 0.
-   ELSE
-      rll = R(1)**Ll
-      IF ( rll<=tiny ) THEN
+   else
+      rll = r(1)**ll
+      if ( rll<=tiny ) then
          sum = 0.
-      ELSE
-         fact = Fct(1)/rll
-         sum = fact*(R(1)**(Ll+1))/(Ll+1)
-      ENDIF
-   ENDIF
+      else
+         fact = fct(1)/rll
+         sum = fact*(r(1)**(ll+1))/(ll+1)
+      endif
+   endif
 !
-   x0 = Fct(1)*R(1)
-   DO i = 3 , N , 2
-      x1 = Fct(i-1)*R(i-1)
-      x2 = Fct(i)*R(i)
-      sum = sum + Dx*(x0+4.D0*x1+x2)
+   x0 = fct(1)*r(1)
+   do i = 3 , n , 2
+      x1 = fct(i-1)*r(i-1)
+      x2 = fct(i)*r(i)
+      sum = sum + dx*(x0+4.D0*x1+x2)
       x0 = x2
-   ENDDO
+   enddo
    sintg = sum/3.D0
-   IF ( mod(N,2)==0 ) sintg = sintg + (Fct(N)+Fct(N-1))/2.D0*(R(N)-R(N-1))
-END FUNCTION sintg
+   if ( mod(n,2)==0 ) sintg = sintg + (fct(n)+fct(n-1))/2.D0*(r(n)-r(n-1))
+end function SINTG
 !
-!*==DINTG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE dintg(Ll,Idir,Fct,Yint,R,Dx,N,Rws)
+!
+subroutine dintg(ll,idir,fct,yint,r,dx,n,rws)
 ! =================================================
 !
 ! integration of fct(i) to yield yint(i)
 ! r(i)=r0*exp(dx*(i-1))
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 corr , Dx , fact , Fct , R , rll , Rws , sum , tiny , x0 , x1 , Yint
-   INTEGER i , Idir , j , N
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
 !
-   DIMENSION Fct(1) , Yint(1) , R(1)
-   REAL*8 Ll
+! Dummy argument declarations rewritten by SPAG
 !
-   DATA tiny/1.0D-20/
+   real(REAL64) , intent(in) :: LL
+   integer , intent(in) :: IDIR
+   real(REAL64) , intent(in) , dimension(1) :: FCT
+   real(REAL64) , intent(inout) , dimension(1) :: YINT
+   real(REAL64) , dimension(1) :: R
+   real(REAL64) , intent(in) :: DX
+   integer , intent(in) :: N
+   real(REAL64) :: RWS
 !
-   IF ( Idir>0 ) THEN
+! Local variable declarations rewritten by SPAG
 !
-      IF ( Ll+1.0<=tiny ) THEN
-         WRITE (9,*) ' dintg: ll+1=' , Ll + 1
+   real(REAL64) :: CORR , FACT , RLL , SUM , X0 , X1
+   integer :: I , J
+   real(REAL64) , save :: TINY
+   external INTER1
+!
+! End of declarations rewritten by SPAG
+!
+   data tiny/1.0D-20/
+!
+   if ( idir>0 ) then
+!
+      if ( ll+1.0<=tiny ) then
+         write (9,*) ' dintg: ll+1=' , ll + 1
          sum = 0.
-      ELSE
-         rll = R(1)**Ll
-         IF ( rll<=tiny ) THEN
+      else
+         rll = r(1)**ll
+         if ( rll<=tiny ) then
             sum = 0.
-         ELSE
-            fact = Fct(1)/rll
-            sum = fact*(R(1)**(Ll+1))/(Ll+1)
-         ENDIF
-      ENDIF
-      Yint(1) = sum
+         else
+            fact = fct(1)/rll
+            sum = fact*(r(1)**(ll+1))/(ll+1)
+         endif
+      endif
+      yint(1) = sum
 !
-      x0 = Fct(1)*R(1)
-      DO i = 2 , N
-         x1 = Fct(i)*R(i)
+      x0 = fct(1)*r(1)
+      do i = 2 , n
+         x1 = fct(i)*r(i)
 ! trapezoidal rule:
-         sum = sum + Dx*(x0+x1)/2.D0
-         Yint(i) = sum
+         sum = sum + dx*(x0+x1)/2.D0
+         yint(i) = sum
          x0 = x1
-      ENDDO
+      enddo
 !
-   ELSE
+   else
 !
-      Yint(N) = 0.
+      yint(n) = 0.
       sum = 0.
-      x1 = Fct(N)*R(N)
+      x1 = fct(n)*r(n)
 !
-      DO i = N - 1 , 1 , -1
-         x0 = Fct(i)*R(i)
-         sum = sum + Dx*(x0+x1)/2.D0
-         Yint(i) = sum
-         IF ( i==N-3 ) THEN
-            CALL inter1(R(N-3),Yint(N-3),4,1,Rws,corr)
+      do i = n - 1 , 1 , -1
+         x0 = fct(i)*r(i)
+         sum = sum + dx*(x0+x1)/2.D0
+         yint(i) = sum
+         if ( i==n-3 ) then
+            call inter1(r(n-3),yint(n-3),4,1,rws,corr)
             sum = sum - corr
-            DO j = N - 3 , N
-               Yint(j) = Yint(j) - corr
-            ENDDO
-         ENDIF
+            do j = n - 3 , n
+               yint(j) = yint(j) - corr
+            enddo
+         endif
          x1 = x0
-      ENDDO
+      enddo
 !
-   ENDIF
-END SUBROUTINE dintg
+   endif
+end subroutine DINTG
 !
-!*==INTER1.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE inter1(R,P,N,Id,Rs,Ps)
+!
+subroutine inter1(r,p,n,id,rs,ps)
 ! =====================================
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 denom , P , Ps , R , Rs , term
-   INTEGER i , Id , j , N
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+!
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: N
+   real(REAL64) , intent(in) , dimension(n) :: R
+   real(REAL64) , intent(in) , dimension(n) :: P
+   integer , intent(in) :: ID
+   real(REAL64) , intent(in) :: RS
+   real(REAL64) , intent(inout) :: PS
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: DENOM , TERM
+   integer :: I , J
+!
+! End of declarations rewritten by SPAG
+!
 !
 !     interpolate via lagrange
 !
-   DIMENSION R(N) , P(N)
-   Ps = 0.D0
-   DO j = 1 , N , Id
+   ps = 0.D0
+   do j = 1 , n , id
       term = 1.D0
       denom = 1.D0
-      DO i = 1 , N , Id
-         IF ( i/=j ) THEN
-            denom = denom*(R(j)-R(i))
-            term = term*(Rs-R(i))
-         ENDIF
-      ENDDO
-      Ps = Ps + term*P(j)/denom
-   ENDDO
-END SUBROUTINE inter1
+      do i = 1 , n , id
+         if ( i/=j ) then
+            denom = denom*(r(j)-r(i))
+            term = term*(rs-r(i))
+         endif
+      enddo
+      ps = ps + term*p(j)/denom
+   enddo
+end subroutine INTER1
 !
-!*==SBF.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE sbf(E,R,Fb,Fn)
+!
+subroutine sbf(e,r,fb,fn)
 ! =============================
+!
 ! spherical bessel and neuman functions for            e > 0
 ! modified spherical bessel and neuman functions for   e < 0
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 E , Fb , Fn , R , tl
-   INTEGER l
-!*** End of declarations inserted by SPAG
-   INCLUDE 'l.par'
+   use iso_fortran_env
+   implicit none
+   include 'l.par'
 !
-   COMPLEX*16 cfb(0:LMAX+1) , cfn(0:LMAX+1)
-   COMPLEX*16 ecompl , eroot , x1 , x2 , sinx , cosx , cimmi
-   DIMENSION Fb(0:LMAX+1) , Fn(0:LMAX+1)
+! Dummy argument declarations rewritten by SPAG
 !
-   DATA cimmi/(0.0D0,-1.0D0)/
+   real(REAL64) , intent(in) :: E
+   real(REAL64) , intent(in) :: R
+   real(REAL64) , intent(out) , dimension(0:lmax+1) :: FB
+   real(REAL64) , intent(out) , dimension(0:lmax+1) :: FN
 !
-   ecompl = dcmplx(E,0.D0)
+! Local variable declarations rewritten by SPAG
+!
+   complex(REAL64) , dimension(0:lmax+1) :: CFB , CFN
+   complex(REAL64) , save :: CIMMI
+   complex(REAL64) :: COSX , ECOMPL , EROOT , SINX , X1 , X2
+   integer :: L
+   real(REAL64) :: TL
+!
+! End of declarations rewritten by SPAG
+!
+   data cimmi/(0.0D0,-1.0D0)/
+!
+   ecompl = dcmplx(e,0.D0)
    eroot = cdsqrt(ecompl)
-   x1 = eroot*R
+   x1 = eroot*r
    x2 = x1*x1
    sinx = cdsin(x1)
    cosx = cdcos(x1)
@@ -1161,109 +1272,128 @@ SUBROUTINE sbf(E,R,Fb,Fn)
    cfn(0) = -cosx/x1
    cfn(1) = -cosx/x2 - sinx/x1
 !
-   DO l = 2 , LMAX + 1
+   do l = 2 , lmax + 1
       tl = dfloat(2*l-1)
       cfb(l) = tl*cfb(l-1)/x1 - cfb(l-2)
       cfn(l) = tl*cfn(l-1)/x1 - cfn(l-2)
-   ENDDO
+   enddo
 !
-   IF ( E<0. ) THEN
+   if ( e<0. ) then
       cfn(0) = cfn(0)*cimmi
-      DO l = 1 , LMAX + 1
+      do l = 1 , lmax + 1
          cfb(l) = cfb(l)*cimmi**l
          cfn(l) = cfn(l)*cimmi**(l+1)
-      ENDDO
-   ENDIF
+      enddo
+   endif
 !
-   DO l = 0 , LMAX + 1
-      Fb(l) = dreal(cfb(l))
-      Fn(l) = dreal(cfn(l))
-   ENDDO
+   do l = 0 , lmax + 1
+      fb(l) = dreal(cfb(l))
+      fn(l) = dreal(cfn(l))
+   enddo
 !
-END SUBROUTINE sbf
+end subroutine SBF
 !
-!*==SBF1.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE sbf1(E,R,Fb,Fn)
+!
+subroutine sbf1(e,r,fb,fn)
 ! =============================
 !
 ! spherical bessel and neuman functions for            e > 0
 ! modified spherical bessel and neuman functions for   e < 0
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 cosx , E , eroot , Fb , Fn , R , sinx , tl , x1 , x2
-   INTEGER l
-!*** End of declarations inserted by SPAG
-   INCLUDE 'l.par'
+   use iso_fortran_env
+   implicit none
+   include 'l.par'
 !
-   DIMENSION Fb(0:LMAX+1) , Fn(0:LMAX+1)
+! Dummy argument declarations rewritten by SPAG
 !
+   real(REAL64) , intent(in) :: E
+   real(REAL64) , intent(in) :: R
+   real(REAL64) , intent(inout) , dimension(0:lmax+1) :: FB
+   real(REAL64) , intent(inout) , dimension(0:lmax+1) :: FN
 !
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: COSX , EROOT , SINX , TL , X1 , X2
+   integer :: L
+!
+! End of declarations rewritten by SPAG
 !     shyp(x)=0.5d0*(dexp(x)-dexp(-x))
 !     chyp(x)=0.5d0*(dexp(x)+dexp(-x))
 !
-   IF ( E>0. ) THEN
+   if ( e>0. ) then
 !
-      eroot = dsqrt(E)
-      x1 = eroot*R
+      eroot = dsqrt(e)
+      x1 = eroot*r
       x2 = x1*x1
       sinx = dsin(x1)
       cosx = dcos(x1)
 !
-      Fb(0) = sinx/x1
-      Fb(1) = sinx/x2 - cosx/x1
-      Fn(0) = -cosx/x1
-      Fn(1) = -cosx/x2 - sinx/x1
+      fb(0) = sinx/x1
+      fb(1) = sinx/x2 - cosx/x1
+      fn(0) = -cosx/x1
+      fn(1) = -cosx/x2 - sinx/x1
 !
-      DO l = 2 , LMAX + 1
+      do l = 2 , lmax + 1
          tl = dfloat(2*l-1)
-         Fb(l) = tl*Fb(l-1)/x1 - Fb(l-2)
-         Fn(l) = tl*Fn(l-1)/x1 - Fn(l-2)
-      ENDDO
+         fb(l) = tl*fb(l-1)/x1 - fb(l-2)
+         fn(l) = tl*fn(l-1)/x1 - fn(l-2)
+      enddo
 !
-   ELSE
+   else
 !
-      eroot = dsqrt(-E)
-      x1 = eroot*R
+      eroot = dsqrt(-e)
+      x1 = eroot*r
       x2 = x1*x1
       sinx = dsinh(x1)
       cosx = dcosh(x1)
 !
-      Fb(0) = sinx/x1
-      Fb(1) = -sinx/x2 + cosx/x1
-      Fn(0) = cosx/x1
-      Fn(1) = -cosx/x2 + sinx/x1
+      fb(0) = sinx/x1
+      fb(1) = -sinx/x2 + cosx/x1
+      fn(0) = cosx/x1
+      fn(1) = -cosx/x2 + sinx/x1
 !
-      DO l = 2 , LMAX + 1
+      do l = 2 , lmax + 1
          tl = dfloat(2*l-1)
-         Fb(l) = -tl*Fb(l-1)/x1 + Fb(l-2)
-         Fn(l) = -tl*Fn(l-1)/x1 + Fn(l-2)
-      ENDDO
+         fb(l) = -tl*fb(l-1)/x1 + fb(l-2)
+         fn(l) = -tl*fn(l-1)/x1 + fn(l-2)
+      enddo
 !
-   ENDIF
+   endif
 !
-END SUBROUTINE sbf1
+end subroutine SBF1
 !
-!*==WIG3J.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE wig3j(W3j,Pun)
+!
+subroutine wig3j(w3j,pun)
 ! ===================================
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 half , halfm , result , small , thrcof , W3j , xlmat , xlmax , xlmin
-   INTEGER i1 , ier , iwigtes , kap1 , kap2 , l1 , l2 , lam , lamax , lamin , NDIM
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+   include 'l.par'
 !
-   PARAMETER (NDIM=100)
-   INCLUDE 'l.par'
+! PARAMETER definitions rewritten by SPAG
 !
-   DIMENSION W3j(-LMAX-1:LMAX,-LMAX-1:LMAX,0:LMAX2)
-   DIMENSION thrcof(NDIM)
-   REAL*8 nul , j1 , j2
-   INTEGER Pun
+   integer , parameter :: NDIM = 100
 !
-   DATA nul , small , half , halfm/0.D0 , 0.01D0 , 0.5D0 , -0.5D0/
-   DATA iwigtes/0/
+! Dummy argument declarations rewritten by SPAG
+!
+   real(REAL64) , intent(out) , dimension(-lmax-1:lmax,-lmax-1:lmax,0:lmax2) :: W3J
+   integer , intent(in) :: PUN
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) , save :: HALF , HALFM , SMALL
+   integer :: I1 , IER , KAP1 , KAP2 , L1 , L2 , LAM , LAMAX , LAMIN
+   integer , save :: IWIGTES
+   real(REAL64) :: J1 , J2
+   real(REAL64) , save :: NUL
+   real(REAL64) :: RESULT , XLMAT , XLMAX , XLMIN
+   real(REAL64) , dimension(ndim) :: THRCOF
+   external REC3JJ
+!
+! End of declarations rewritten by SPAG
+!
+   data nul , small , half , halfm/0.D0 , 0.01D0 , 0.5D0 , -0.5D0/
+   data iwigtes/0/
 !
 !
 !                                   j1  lambda  j2
@@ -1281,85 +1411,98 @@ SUBROUTINE wig3j(W3j,Pun)
 ! convention for storage :  w3j(kappa1,kappa2,lambda)
 !
 !
-   DO kap1 = -LMAX - 1 , LMAX
-      DO kap2 = -LMAX - 1 , LMAX
-         DO lam = 0 , LMAX2
-            W3j(kap1,kap2,lam) = nul
-         ENDDO
-      ENDDO
-   ENDDO
+   do kap1 = -lmax - 1 , lmax
+      do kap2 = -lmax - 1 , lmax
+         do lam = 0 , lmax2
+            w3j(kap1,kap2,lam) = nul
+         enddo
+      enddo
+   enddo
 !
-   DO kap1 = -LMAX - 1 , LMAX
+   do kap1 = -lmax - 1 , lmax
 !
-      IF ( kap1/=0 ) THEN
-         IF ( kap1<0 ) THEN
+      if ( kap1/=0 ) then
+         if ( kap1<0 ) then
             j1 = -kap1 - half
             l1 = -kap1 - 1
-         ELSE
+         else
             j1 = kap1 - half
             l1 = kap1
-         ENDIF
+         endif
 !
-         DO kap2 = -LMAX - 1 , LMAX
+         do kap2 = -lmax - 1 , lmax
 !
-            IF ( kap2/=0 ) THEN
-               IF ( kap2<0 ) THEN
+            if ( kap2/=0 ) then
+               if ( kap2<0 ) then
                   j2 = -kap2 - half
                   l2 = -kap2 - 1
-               ELSE
+               else
                   j2 = kap2 - half
                   l2 = kap2
-               ENDIF
+               endif
 !
-               CALL rec3jj(thrcof,j2,j1,halfm,half,xlmin,xlmax,xlmat,NDIM,ier)
-               IF ( ier>=0 ) THEN
+               call rec3jj(thrcof,j2,j1,halfm,half,xlmin,xlmax,xlmat,ndim,ier)
+               if ( ier>=0 ) then
 !
                   lamin = idint(xlmin+small)
                   lamax = idint(xlmax+small)
 !
-                  DO lam = lamin , lamax
+                  do lam = lamin , lamax
 !
                      i1 = lam - lamin + 1
-                     IF ( mod(lam-lamin,2)/=1 ) THEN
-                        W3j(kap1,kap2,lam) = thrcof(i1)
+                     if ( mod(lam-lamin,2)/=1 ) then
+                        w3j(kap1,kap2,lam) = thrcof(i1)
 !
-                        IF ( iwigtes==1 ) THEN
-                           WRITE (Pun,99001) kap1 , l1 , j1 , kap2 , l2 , j2 , lam , result
+                        if ( iwigtes==1 ) then
+                           write (pun,99001) kap1 , l1 , j1 , kap2 , l2 , j2 , lam , result
 !
-99001                      FORMAT (2I4,f5.1,5x,2I4,f5.1,5x,i4,10x,d17.10)
-                        ENDIF
-                     ENDIF
+99001                      format (2I4,f5.1,5x,2I4,f5.1,5x,i4,10x,d17.10)
+                        endif
+                     endif
 !
-                  ENDDO
-               ENDIF
-            ENDIF
+                  enddo
+               endif
+            endif
 !
-         ENDDO
-      ENDIF
-   ENDDO
+         enddo
+      endif
+   enddo
 !
-END SUBROUTINE wig3j
+end subroutine WIG3J
 !
-!*==WIG6J.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE wig6j(W6j,J1,Pun)
+!
+subroutine wig6j(w6j,j1,pun)
 ! ================================
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 coeff , half , sixcof , small , W6j , xlam , xlamma , xlammi , xlmat
-   INTEGER ier , iwigtes , j3 , l , l2 , lam , lama , lama1 , lama2 , lami , lami1 , lami2 , lamma , lammi , lamp , lp , NDIM
-!*** End of declarations inserted by SPAG
+   use iso_fortran_env
+   implicit none
+   include 'l.par'
 !
-   PARAMETER (NDIM=100)
-   INCLUDE 'l.par'
+! PARAMETER definitions rewritten by SPAG
 !
-   DIMENSION W6j(0:LVMAX,0:LVMAX,0:LMAX,0:LMAX,0:LMAX)
-   DIMENSION sixcof(NDIM)
-   INTEGER Pun
-   REAL*8 nul , j , jp , J1 , j2
+   integer , parameter :: NDIM = 100
 !
-   DATA nul , small , half/0.D0 , 0.01D0 , 0.5D0/
-   DATA iwigtes/0/
+! Dummy argument declarations rewritten by SPAG
+!
+   real(REAL64) , intent(out) , dimension(0:lvmax,0:lvmax,0:lmax,0:lmax,0:lmax) :: W6J
+   real(REAL64) :: J1
+   integer , intent(in) :: PUN
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: COEFF , XLAM , XLAMMA , XLAMMI , XLMAT
+   real(REAL64) , save :: HALF , SMALL
+   integer :: IER , J3 , L , L2 , LAM , LAMA , LAMA1 , LAMA2 , LAMI , LAMI1 , LAMI2 , LAMMA , LAMMI , LAMP , LP
+   integer , save :: IWIGTES
+   real(REAL64) :: J , J2 , JP
+   real(REAL64) , save :: NUL
+   real(REAL64) , dimension(ndim) :: SIXCOF
+   external REC6J
+!
+! End of declarations rewritten by SPAG
+!
+   data nul , small , half/0.D0 , 0.01D0 , 0.5D0/
+   data iwigtes/0/
 !
 !
 !  wigner 6j coefficients
@@ -1380,28 +1523,28 @@ SUBROUTINE wig6j(W6j,J1,Pun)
 !        j2=(2*l2+1)/2        l2=0,1,...,lmax
 !
 !
-   DO l = 0 , LVMAX
-      DO lp = 0 , LVMAX
-         DO l2 = 0 , LMAX
-            DO lam = 0 , LMAX
-               DO lamp = 0 , LMAX
-                  W6j(l,lp,l2,lam,lamp) = nul
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDDO
-   ENDDO
+   do l = 0 , lvmax
+      do lp = 0 , lvmax
+         do l2 = 0 , lmax
+            do lam = 0 , lmax
+               do lamp = 0 , lmax
+                  w6j(l,lp,l2,lam,lamp) = nul
+               enddo
+            enddo
+         enddo
+      enddo
+   enddo
 !
 !
-   DO l = 0 , LVMAX
+   do l = 0 , lvmax
       j = (2.*l+1.)*half
-      DO lp = 0 , LVMAX
+      do lp = 0 , lvmax
          jp = (2.*lp+1.)*half
 !
-         lami1 = idint(dabs(J1-jp)+small)
-         lama1 = idint(J1+jp+small)
+         lami1 = idint(dabs(j1-jp)+small)
+         lama1 = idint(j1+jp+small)
 !
-         DO l2 = 0 , LMAX
+         do l2 = 0 , lmax
             j2 = (2.*l2+1.)*half
 !
             lami2 = idint(dabs(j-j2)+small)
@@ -1409,61 +1552,76 @@ SUBROUTINE wig6j(W6j,J1,Pun)
             lami = max(lami1,lami2)
             lama = min(lama1,lama2)
 !
-            DO lam = 0 , LMAX
-               IF ( lam>=lami .AND. lam<=lama ) THEN
+            do lam = 0 , lmax
+               if ( lam>=lami .and. lam<=lama ) then
                   xlam = dfloat(lam)
 !
-                  CALL rec6j(sixcof,J1,j,xlam,j2,jp,xlammi,xlamma,xlmat,NDIM,ier)
-                  IF ( ier>=0 ) THEN
+                  call rec6j(sixcof,j1,j,xlam,j2,jp,xlammi,xlamma,xlmat,ndim,ier)
+                  if ( ier>=0 ) then
 !
                      lammi = idint(xlammi+small)
                      lamma = idint(xlamma+small)
 !
-                     DO lamp = lammi , lamma
+                     do lamp = lammi , lamma
                         coeff = 1.0 - 2.0*mod(lam+lamp+1,2)
-                        W6j(l,lp,l2,lam,lamp) = coeff*sixcof(lamp-lammi+1)
+                        w6j(l,lp,l2,lam,lamp) = coeff*sixcof(lamp-lammi+1)
 !
-                        IF ( iwigtes==1 ) THEN
-                           WRITE (Pun,99001) lamp , J1 , j , lam , j2 , j3 , sixcof(lamp-lammi+1)
+                        if ( iwigtes==1 ) then
+                           write (pun,99001) lamp , j1 , j , lam , j2 , j3 , sixcof(lamp-lammi+1)
 !
-99001                      FORMAT (i4,2F5.1,5x,i4,2F5.1,10x,d17.10)
-                        ENDIF
-                     ENDDO
-                  ENDIF
-               ENDIF
+99001                      format (i4,2F5.1,5x,i4,2F5.1,10x,d17.10)
+                        endif
+                     enddo
+                  endif
+               endif
 !
-            ENDDO
+            enddo
 !
-         ENDDO
-      ENDDO
-   ENDDO
+         enddo
+      enddo
+   enddo
 !
-END SUBROUTINE wig6j
+end subroutine WIG6J
 !
-!*==REC3JJ.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
+!
+subroutine rec3jj(thrcof,l2,l3,m2,m3,l1min,l1max,lmatch,ndim,ier)
 ! =====================================================================
 !
-!  j1-recursion of 3j-coefficients
-! recursive evaluation of 3j- and
+!  j1-recursion of 3j-coefficients recursive evaluation of 3j- and
 ! 6j-coefficients.  k. schulten, r.g. gordon.
 ! ref. in comp. phys. commun. 11 (1976) 269
 !
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a1 , a1s , a2 , a2s , c1 , c1old , c2 , cnorm , denom , dv , eps , half , huge , oldfac , one , ratio , sign1 , sign2 ,  &
-        & srhuge , srtiny
-   REAL*8 sum1 , sum2 , sumbac , sumfor , sumuni , Thrcof , three , thresh , tiny , two , x , x1 , x2 , x3 , y , y1 , y2 , y3 ,    &
-        & zero
-   INTEGER i , Ier , index , l1cmax , l1cmin , lstep , n , Ndim , nfin , nfinp1 , nfinp2 , nfinp3 , nlim , nstep2
-!*** End of declarations inserted by SPAG
-   REAL*8 l1 , L2 , L3 , m1 , M2 , M3 , L1min , L1max , newfac , Lmatch
-   DIMENSION Thrcof(Ndim)
-   INTEGER :: spag_nextblock_1
+   use iso_fortran_env
+   implicit none
 !
-   DATA zero , eps , half , one/0D0 , 0.01D0 , 0.5D0 , 1D0/
-   DATA two , three/2D0 , 3D0/
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NDIM
+   real(REAL64) , intent(inout) , dimension(ndim) :: THRCOF
+   real(REAL64) , intent(in) :: L2
+   real(REAL64) , intent(in) :: L3
+   real(REAL64) , intent(in) :: M2
+   real(REAL64) , intent(in) :: M3
+   real(REAL64) , intent(inout) :: L1MIN
+   real(REAL64) , intent(inout) :: L1MAX
+   real(REAL64) , intent(out) :: LMATCH
+   integer , intent(inout) :: IER
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: A1 , A1S , A2 , A2S , C1 , C1OLD , C2 , CNORM , DENOM , DV , OLDFAC , RATIO , SIGN1 , SIGN2 , SUM1 , SUM2 ,     &
+                 & SUMBAC , SUMFOR , SUMUNI , THRESH , X , X1 , X2 , X3 , Y , Y1 , Y2 , Y3
+   real(REAL64) , save :: EPS , HALF , HUGE , ONE , SRHUGE , SRTINY , THREE , TINY , TWO , ZERO
+   integer :: I , INDEX , L1CMAX , L1CMIN , LSTEP , N , NFIN , NFINP1 , NFINP2 , NFINP3 , NLIM , NSTEP2
+   real(REAL64) :: L1 , M1 , NEWFAC
+!
+! End of declarations rewritten by SPAG
+!
+   integer :: SPAG_NextBlock_1
+!
+   data zero , eps , half , one/0D0 , 0.01D0 , 0.5D0 , 1D0/
+   data two , three/2D0 , 3D0/
 !
 !  routine to generate set of 3j-coefficients   l1  l2  l3
 !                                               m1  m2  m3
@@ -1492,166 +1650,161 @@ SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
 !  number which is representable on the computer.  srtiny is square
 !  root of tiny .
 !
-   DATA tiny , srtiny/1.0D-10 , 1.0D-05/
+   data tiny , srtiny/1.0D-10 , 1.0D-05/
 !
 !  huge should be set close to largest positive floating point
 !  number which is representable on the computer.  srhuge is
 !  square root of huge .
 !
-   DATA huge , srhuge/1.0D10 , 1.0D05/
-   spag_nextblock_1 = 1
-   SPAG_DispatchLoop_1: DO
-      SELECT CASE (spag_nextblock_1)
-      CASE (1)
+   data huge , srhuge/1.0D10 , 1.0D05/
+   SPAG_NextBlock_1 = 1
+   spag_dispatchloop_1: do
+      select case (SPAG_NextBlock_1)
+      case (1)
 !
-         Lmatch = zero
-         m1 = -M2 - M3
+         lmatch = zero
+         m1 = -m2 - m3
 !
 !  check relative magnitude of l- and m-values
-         IF ( L2-dabs(M2)+eps>=0 ) THEN
-            IF ( L3-dabs(M3)+eps>=0 ) THEN
-               IF ( dmod(L2+dabs(M2)+eps,one)<eps+eps ) THEN
-                  IF ( dmod(L3+dabs(M3)+eps,one)<eps+eps ) THEN
-!
-!
+         if ( l2-dabs(m2)+eps>=0 ) then
+            if ( l3-dabs(m3)+eps>=0 ) then
+               if ( dmod(l2+dabs(m2)+eps,one)<eps+eps ) then
+                  if ( dmod(l3+dabs(m3)+eps,one)<eps+eps ) then
 !
 !  limits for l1
 !
-                     L1min = dmax1(dabs(L2-L3),dabs(m1))
-                     L1max = L2 + L3
-                     IF ( L1min<L1max-eps ) THEN
+                     l1min = dmax1(dabs(l2-l3),dabs(m1))
+                     l1max = l2 + l3
+                     if ( l1min<l1max-eps ) then
 !
 !
 !
-                        Ier = 0
-                        nfin = idint(L1max-L1min+one+eps)
-                        IF ( Ndim<nfin ) THEN
+                        ier = 0
+                        nfin = idint(l1max-l1min+one+eps)
+                        if ( ndim<nfin ) then
 !
 !  dimension of thrcof not large enough to hold all the coefficients
 !  required
 !
-                           Ier = -2
-                           WRITE (9,99001) L2 , L3 , m1 , M2 , M3 , nfin , Ndim
-99001                      FORMAT (///1x,'3j-coefficients',9x,'l1',2F7.1/20x,3F7.1,4x,'exceed storage provided  (',i4,',',i4,')')
-                           RETURN
-                        ELSE
+                           ier = -2
+                           write (9,99001) l2 , l3 , m1 , m2 , m3 , nfin , ndim
+99001                      format (///1x,'3j-coefficients',9x,'l1',2F7.1/20x,3F7.1,4x,'exceed storage provided  (',i4,',',i4,')')
+                           return
+                        else
 !
 !
 !  starting forward recursion from l1min taking nstep1 steps
 !
-                           l1 = L1min
-                           Thrcof(1) = srtiny
+                           l1 = l1min
+                           thrcof(1) = srtiny
                            sum1 = (l1+l1+one)*tiny
 !
 !
                            lstep = 1
-                           spag_nextblock_1 = 2
-                           CYCLE SPAG_DispatchLoop_1
-                        ENDIF
-                     ELSEIF ( L1min<L1max+eps ) THEN
+                           SPAG_NextBlock_1 = 2
+                           cycle spag_dispatchloop_1
+                        endif
+                     elseif ( l1min<l1max+eps ) then
 !
 !
 !  this is reached in case that l1 can take only one value,
 !  i.e. l1min = l1max
 !
-                        Ier = 0
-                        Thrcof(1) = (-one)**idint(dabs(L2+M2-L3+M3)+eps)/dsqrt(L1min+L2+L3+one)
-                        l1cmin = L1min
-                        l1cmax = L1max
-                        RETURN
-                     ENDIF
-                  ENDIF
-               ENDIF
-            ENDIF
-         ENDIF
+                        ier = 0
+                        thrcof(1) = (-one)**idint(dabs(l2+m2-l3+m3)+eps)/dsqrt(l1min+l2+l3+one)
+                        l1cmin = l1min
+                        l1cmax = l1max
+                        return
+                     endif
+                  endif
+               endif
+            endif
+         endif
 !
 !
 !  this is reached if l2-/m2/ and l3-/m3/  less than zero or not integer
 !
-         Ier = -1
-         WRITE (9,99002) L2 , L3 , m1 , M2 , M3
-99002    FORMAT (///1x,'3j-coefficients',9x,'l1',2F7.1/20x,3F7.1,4x,'do not satisfy the condition l2-/m2/ and l3-/m3/ ge zero ',   &
+         ier = -1
+         write (9,99002) l2 , l3 , m1 , m2 , m3
+99002    format (///1x,'3j-coefficients',9x,'l1',2F7.1/20x,3F7.1,4x,'do not satisfy the condition l2-/m2/ and l3-/m3/ ge zero ',   &
                 &'and integer')
-         RETURN
-      CASE (2)
+         return
+      case (2)
          lstep = lstep + 1
          l1 = l1 + one
 !
 !
          oldfac = newfac
-         a1 = (l1+L2+L3+one)*(l1-L2+L3)*(l1+L2-L3)*(-l1+L2+L3+one)
+         a1 = (l1+l2+l3+one)*(l1-l2+l3)*(l1+l2-l3)*(-l1+l2+l3+one)
          a2 = (l1+m1)*(l1-m1)
          newfac = dsqrt(a1*a2)
-         IF ( l1<one+eps ) THEN
+         if ( l1<one+eps ) then
 !
 !  if l1 = 1  (l1-1) has to be factored out of dv, hence
 !
-            c1 = -(l1+l1-one)*l1*(M3-M2)/newfac
-         ELSE
+            c1 = -(l1+l1-one)*l1*(m3-m2)/newfac
+         else
 !
 !
-            dv = -L2*(L2+one)*m1 + L3*(L3+one)*m1 + l1*(l1-one)*(M3-M2)
+            dv = -l2*(l2+one)*m1 + l3*(l3+one)*m1 + l1*(l1-one)*(m3-m2)
             denom = (l1-one)*newfac
 !
 !
-            IF ( lstep>2 ) c1old = dabs(c1)
+            if ( lstep>2 ) c1old = dabs(c1)
             c1 = -(l1+l1-one)*dv/denom
-         ENDIF
+         endif
 !
-         IF ( lstep>2 ) THEN
+         if ( lstep>2 ) then
 !
 !
             c2 = -l1*oldfac/denom
 !
 !  recursion to the next 3j-coefficient x
 !
-            x = c1*Thrcof(lstep-1) + c2*Thrcof(lstep-2)
-            Thrcof(lstep) = x
+            x = c1*thrcof(lstep-1) + c2*thrcof(lstep-2)
+            thrcof(lstep) = x
             sumfor = sum1
             sum1 = sum1 + (l1+l1+one)*x*x
-            IF ( lstep/=nfin ) THEN
+            if ( lstep/=nfin ) then
 !
 !  see if last unnormalized 3j-coefficient exceeds srhuge
 !
-               IF ( dabs(x)>=srhuge ) THEN
+               if ( dabs(x)>=srhuge ) then
 !
 !  this is reached if last 3j-coefficient larger than srhuge
 !  so that the recursion series thrcof(1), ... , thrcof(lstep)
 !  has to be rescaled to prevent overflow
 !
-                  Ier = Ier + 1
-                  DO i = 1 , lstep
-                     IF ( dabs(Thrcof(i))<srtiny ) Thrcof(i) = zero
-                     Thrcof(i) = Thrcof(i)/srhuge
-                  ENDDO
+                  ier = ier + 1
+                  do i = 1 , lstep
+                     if ( dabs(thrcof(i))<srtiny ) thrcof(i) = zero
+                     thrcof(i) = thrcof(i)/srhuge
+                  enddo
                   sum1 = sum1/huge
                   sumfor = sumfor/huge
                   x = x/srhuge
-               ENDIF
+               endif
 !
 !  as long as /c1/ is decreasing the recursion proceeds towards
 !  increasing 3j-values and, hence, is numerically stable.  once
 !  an increase of /c1/ is detected the recursion direction is
 !  reversed.
 !
-               IF ( c1old>dabs(c1) ) THEN
-                  spag_nextblock_1 = 2
-                  CYCLE SPAG_DispatchLoop_1
-               ENDIF
-            ENDIF
+               if ( c1old>dabs(c1) ) then
+                  SPAG_NextBlock_1 = 2
+                  cycle spag_dispatchloop_1
+               endif
+            endif
 !
 !
 !  keep three 3j-coefficients around lmatch for comparision with
 !  backward recursion.
 !
-            Lmatch = l1 - 1
+            lmatch = l1 - 1
             x1 = x
-            x2 = Thrcof(lstep-1)
-            x3 = Thrcof(lstep-2)
+            x2 = thrcof(lstep-1)
+            x3 = thrcof(lstep-2)
             nstep2 = nfin - lstep + 3
-!
-!
-!
 !
 !  starting backward recursion from l1max taking nstep2 steps, so
 !  that forward and backward recursion overlap at three points
@@ -1660,43 +1813,43 @@ SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
             nfinp1 = nfin + 1
             nfinp2 = nfin + 2
             nfinp3 = nfin + 3
-            l1 = L1max
-            Thrcof(nfin) = srtiny
+            l1 = l1max
+            thrcof(nfin) = srtiny
             sum2 = tiny*(l1+l1+one)
 !
             l1 = l1 + two
             lstep = 1
-            DO
+            do
                lstep = lstep + 1
                l1 = l1 - one
 !
                oldfac = newfac
-               a1s = (l1+L2+L3)*(l1-L2+L3-one)*(l1+L2-L3-one)*(-l1+L2+L3+two)
+               a1s = (l1+l2+l3)*(l1-l2+l3-one)*(l1+l2-l3-one)*(-l1+l2+l3+two)
                a2s = (l1+m1-one)*(l1-m1-one)
                newfac = dsqrt(a1s*a2s)
 !
-               dv = -L2*(L2+one)*m1 + L3*(L3+one)*m1 + l1*(l1-one)*(M3-M2)
+               dv = -l2*(l2+one)*m1 + l3*(l3+one)*m1 + l1*(l1-one)*(m3-m2)
 !
                denom = l1*newfac
                c1 = -(l1+l1-one)*dv/denom
-               IF ( lstep>2 ) THEN
+               if ( lstep>2 ) then
 !
 !
                   c2 = -(l1-one)*oldfac/denom
 !
 !  recursion to the next 3j-coefficient y
 !
-                  y = c1*Thrcof(nfinp2-lstep) + c2*Thrcof(nfinp3-lstep)
+                  y = c1*thrcof(nfinp2-lstep) + c2*thrcof(nfinp3-lstep)
 !
-                  IF ( lstep==nstep2 ) THEN
+                  if ( lstep==nstep2 ) then
 !
 !
 !  the forward recursion 3j-coefficients x1, x2, x3 are to be matched
 !  with the corresponding backward recursion values y1, y2, y3.
 !
                      y3 = y
-                     y2 = Thrcof(nfinp2-lstep)
-                     y1 = Thrcof(nfinp3-lstep)
+                     y2 = thrcof(nfinp2-lstep)
+                     y1 = thrcof(nfinp3-lstep)
 !
 !
 !  determine now ratio such that yi = ratio * xi  (i=1,2,3) holds
@@ -1705,77 +1858,77 @@ SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
                      ratio = (x1*y1+x2*y2+x3*y3)/(x1*x1+x2*x2+x3*x3)
                      nlim = nfin - nstep2 + 1
 !
-                     IF ( dabs(ratio)<one ) THEN
+                     if ( dabs(ratio)<one ) then
 !
                         nlim = nlim + 1
                         ratio = one/ratio
-                        DO n = nlim , nfin
-                           Thrcof(n) = ratio*Thrcof(n)
-                        ENDDO
+                        do n = nlim , nfin
+                           thrcof(n) = ratio*thrcof(n)
+                        enddo
                         sumuni = sumfor + ratio*ratio*sumbac
-                     ELSE
+                     else
 !
-                        DO n = 1 , nlim
-                           Thrcof(n) = ratio*Thrcof(n)
-                        ENDDO
+                        do n = 1 , nlim
+                           thrcof(n) = ratio*thrcof(n)
+                        enddo
                         sumuni = ratio*ratio*sumfor + sumbac
-                     ENDIF
-                     spag_nextblock_1 = 3
-                     CYCLE SPAG_DispatchLoop_1
-                  ELSE
+                     endif
+                     SPAG_NextBlock_1 = 3
+                     cycle spag_dispatchloop_1
+                  else
 !
-                     Thrcof(nfinp1-lstep) = y
+                     thrcof(nfinp1-lstep) = y
                      sumbac = sum2
                      sum2 = sum2 + (l1+l1-three)*y*y
 !
 !  see if last unnormalized 3j-coefficient exceeds srhuge
 !
-                     IF ( dabs(y)>=srhuge ) THEN
+                     if ( dabs(y)>=srhuge ) then
 !
 !  this is reached if last 3j-coefficient larger than srhuge
 !  so that the recursion series thrcof(nfin), ... ,thrcof(nfin-lstep+1)
 !  has to be rescaled to prevent overflow
 !
-                        Ier = Ier + 1
-                        DO i = 1 , lstep
+                        ier = ier + 1
+                        do i = 1 , lstep
                            index = nfin - i + 1
-                           IF ( dabs(Thrcof(index))<srtiny ) Thrcof(index) = zero
-                           Thrcof(index) = Thrcof(index)/srhuge
-                        ENDDO
+                           if ( dabs(thrcof(index))<srtiny ) thrcof(index) = zero
+                           thrcof(index) = thrcof(index)/srhuge
+                        enddo
                         sum2 = sum2/huge
 !
 !
                         sumbac = sumbac/huge
-                     ENDIF
-                  ENDIF
-               ELSE
+                     endif
+                  endif
+               else
 !
 !  if l1 = l1max + 1  the third term in the recursion formula vanishes
 !
                   y = srtiny*c1
-                  Thrcof(nfin-1) = y
+                  thrcof(nfin-1) = y
                   sumbac = sum2
 !
                   sum2 = sum2 + tiny*(l1+l1-three)*c1*c1
-               ENDIF
-            ENDDO
-         ELSE
+               endif
+            enddo
+         else
 !
 !
 !  if l1 = l1min + 1  the third term in the recursion equation vanishes
 !  , hence
             x = srtiny*c1
-            Thrcof(2) = x
+            thrcof(2) = x
             sum1 = sum1 + tiny*(l1+l1+one)*c1*c1
-            IF ( lstep/=nfin ) THEN
-               spag_nextblock_1 = 2
-               CYCLE SPAG_DispatchLoop_1
-            ENDIF
+            if ( lstep/=nfin ) then
+               SPAG_NextBlock_1 = 2
+               cycle spag_dispatchloop_1
+            endif
 !
             sumuni = sum1
-         ENDIF
-         spag_nextblock_1 = 3
-      CASE (3)
+         endif
+         SPAG_NextBlock_1 = 3
+      case (3)
 !
 !
 !  normalize 3j-coefficients
@@ -1784,31 +1937,31 @@ SUBROUTINE rec3jj(Thrcof,L2,L3,M2,M3,L1min,L1max,Lmatch,Ndim,Ier)
 !
 !  sign convention for last 3j-coefficient determines overall phase
 !
-         sign1 = dsign(one,Thrcof(nfin))
-         sign2 = (-one)**idint(dabs(L2+M2-L3+M3)+eps)
-         IF ( sign1*sign2<=0 ) cnorm = -cnorm
+         sign1 = dsign(one,thrcof(nfin))
+         sign2 = (-one)**idint(dabs(l2+m2-l3+m3)+eps)
+         if ( sign1*sign2<=0 ) cnorm = -cnorm
 !
-         IF ( dabs(cnorm)<one ) THEN
+         if ( dabs(cnorm)<one ) then
 !
             thresh = tiny/dabs(cnorm)
-            DO n = 1 , nfin
-               IF ( dabs(Thrcof(n))<thresh ) Thrcof(n) = zero
-               Thrcof(n) = cnorm*Thrcof(n)
-            ENDDO
-            EXIT SPAG_DispatchLoop_1
-         ENDIF
+            do n = 1 , nfin
+               if ( dabs(thrcof(n))<thresh ) thrcof(n) = zero
+               thrcof(n) = cnorm*thrcof(n)
+            enddo
+            exit spag_dispatchloop_1
+         endif
 !
-         DO n = 1 , nfin
-            Thrcof(n) = cnorm*Thrcof(n)
-         ENDDO
-         RETURN
-      END SELECT
-   ENDDO SPAG_DispatchLoop_1
+         do n = 1 , nfin
+            thrcof(n) = cnorm*thrcof(n)
+         enddo
+         return
+      end select
+   enddo spag_dispatchloop_1
 !
-END SUBROUTINE rec3jj
+end subroutine REC3JJ
 !
-!*==REC6J.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
+!
+subroutine rec6j(sixcof,l2,l3,l4,l5,l6,l1min,l1max,lmatch,ndim,ier)
 ! ===================================================================
 !
 !  j1-recursion of 6j-coefficients
@@ -1817,20 +1970,37 @@ SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
 ! ref. in comp. phys. commun. 11 (1976) 269
 !
 !
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a1 , a1s , a2 , a2s , c1 , c1old , c2 , cnorm , denom , dv , eps , half , huge , oldfac , one , ratio , sign1 , sign2 ,  &
-        & Sixcof , srhuge
-   REAL*8 srtiny , sum1 , sum2 , sumbac , sumfor , sumuni , three , thresh , tiny , two , x , x1 , x2 , x3 , y , y1 , y2 , y3 ,    &
-        & zero
-   INTEGER i , Ier , index , l1cmax , l1cmin , lstep , n , Ndim , nfin , nfinp1 , nfinp2 , nfinp3 , nlim , nstep2
-!*** End of declarations inserted by SPAG
-   REAL*8 l1 , L2 , L3 , L4 , L5 , L6 , L1min , L1max , newfac , Lmatch
-   DIMENSION Sixcof(Ndim)
-   INTEGER :: spag_nextblock_1
+   use iso_fortran_env
+   implicit none
 !
-   DATA zero , eps , half , one/0D0 , 0.01D0 , 0.5D0 , 1D0/
-   DATA two , three/2D0 , 3D0/
+! Dummy argument declarations rewritten by SPAG
+!
+   integer , intent(in) :: NDIM
+   real(REAL64) , intent(inout) , dimension(ndim) :: SIXCOF
+   real(REAL64) , intent(in) :: L2
+   real(REAL64) , intent(in) :: L3
+   real(REAL64) , intent(in) :: L4
+   real(REAL64) , intent(in) :: L5
+   real(REAL64) , intent(in) :: L6
+   real(REAL64) , intent(inout) :: L1MIN
+   real(REAL64) , intent(inout) :: L1MAX
+   real(REAL64) , intent(out) :: LMATCH
+   integer , intent(inout) :: IER
+!
+! Local variable declarations rewritten by SPAG
+!
+   real(REAL64) :: A1 , A1S , A2 , A2S , C1 , C1OLD , C2 , CNORM , DENOM , DV , OLDFAC , RATIO , SIGN1 , SIGN2 , SUM1 , SUM2 ,     &
+                 & SUMBAC , SUMFOR , SUMUNI , THRESH , X , X1 , X2 , X3 , Y , Y1 , Y2 , Y3
+   real(REAL64) , save :: EPS , HALF , HUGE , ONE , SRHUGE , SRTINY , THREE , TINY , TWO , ZERO
+   integer :: I , INDEX , L1CMAX , L1CMIN , LSTEP , N , NFIN , NFINP1 , NFINP2 , NFINP3 , NLIM , NSTEP2
+   real(REAL64) :: L1 , NEWFAC
+!
+! End of declarations rewritten by SPAG
+!
+   integer :: SPAG_NextBlock_1
+!
+   data zero , eps , half , one/0D0 , 0.01D0 , 0.5D0 , 1D0/
+   data two , three/2D0 , 3D0/
 !
 !  routine to generate the set of 6j-coefficients    l1 l2 l3
 !                                                    l4 l5 l6
@@ -1861,54 +2031,54 @@ SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
 !  number which is representable on the computer.  srtiny is square
 !  root of tiny .
 !
-   DATA tiny , srtiny/1.0D-10 , 1.0D-05/
+   data tiny , srtiny/1.0D-10 , 1.0D-05/
 !
 !  huge should be set close to largest positive floating point
 !  number which is representable on the computer.  srhuge is
 !  square root of huge .
-   DATA huge , srhuge/1.0D10 , 1.0D05/
-   spag_nextblock_1 = 1
-   SPAG_DispatchLoop_1: DO
-      SELECT CASE (spag_nextblock_1)
-      CASE (1)
+   data huge , srhuge/1.0D10 , 1.0D05/
+   SPAG_NextBlock_1 = 1
+   spag_dispatchloop_1: do
+      select case (SPAG_NextBlock_1)
+      case (1)
 !
-         Lmatch = zero
+         lmatch = zero
 !
 !
 !
 !  check if 6j-coefficients obey selection rules
 !
-         IF ( dmod(L2+L3+L5+L6+eps,one)<eps+eps ) THEN
-            IF ( dmod(L4+L2+L6+eps,one)<eps+eps ) THEN
+         if ( dmod(l2+l3+l5+l6+eps,one)<eps+eps ) then
+            if ( dmod(l4+l2+l6+eps,one)<eps+eps ) then
 !
-               IF ( L4+L2>=L6 ) THEN
-                  IF ( L4-L2+L6>=0 ) THEN
-                     IF ( -L4+L2+L6>=0 ) THEN
+               if ( l4+l2>=l6 ) then
+                  if ( l4-l2+l6>=0 ) then
+                     if ( -l4+l2+l6>=0 ) then
 !
-                        IF ( L4+L3>=L5 ) THEN
-                           IF ( L4-L3+L5>=0 ) THEN
-                              IF ( -L4+L3+L5>=0 ) THEN
+                        if ( l4+l3>=l5 ) then
+                           if ( l4-l3+l5>=0 ) then
+                              if ( -l4+l3+l5>=0 ) then
 !
 !  limits for l1
 !
-                                 L1min = dmax1(dabs(L2-L3),dabs(L5-L6))
-                                 L1max = dmin1(L2+L3,L5+L6)
-                                 IF ( L1min<L1max-eps ) THEN
+                                 l1min = dmax1(dabs(l2-l3),dabs(l5-l6))
+                                 l1max = dmin1(l2+l3,l5+l6)
+                                 if ( l1min<l1max-eps ) then
 !
 !
-                                    Ier = 0
-                                    nfin = idint(L1max-L1min+one+eps)
-                                    IF ( Ndim<nfin ) THEN
+                                    ier = 0
+                                    nfin = idint(l1max-l1min+one+eps)
+                                    if ( ndim<nfin ) then
 !
 !  this is reached if array sixcof not large enough to hold all
 !  6j - coefficients required
 !
-                                       Ier = -2
-                                       WRITE (9,99001) L2 , L3 , L4 , L5 , L6 , nfin , Ndim
-99001                                  FORMAT (///1x,'6j-coefficients',9x,'l1',2F7.1/20x,3F7.1,4x,'exceed storage provided  (',i4, &
+                                       ier = -2
+                                       write (9,99001) l2 , l3 , l4 , l5 , l6 , nfin , ndim
+99001                                  format (///1x,'6j-coefficients',9x,'l1',2F7.1/20x,3F7.1,4x,'exceed storage provided  (',i4, &
                                          &',',i4,')')
-                                       RETURN
-                                    ELSE
+                                       return
+                                    else
 !
 !
 !
@@ -1917,100 +2087,100 @@ SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
 !  start of forward recursion
 !
 !
-                                       l1 = L1min
-                                       Sixcof(1) = srtiny
+                                       l1 = l1min
+                                       sixcof(1) = srtiny
                                        sum1 = (l1+l1+one)*tiny
 !
                                        lstep = 1
-                                       spag_nextblock_1 = 2
-                                       CYCLE SPAG_DispatchLoop_1
-                                    ENDIF
-                                 ELSEIF ( L1min<L1max+eps ) THEN
+                                       SPAG_NextBlock_1 = 2
+                                       cycle spag_dispatchloop_1
+                                    endif
+                                 elseif ( l1min<l1max+eps ) then
 !
 !
 !  this is reached in case that l1 can take only one value
 !
-                                    Ier = 0
-                                    Sixcof(1) = (-one)**idint(L2+L3+L5+L6+eps)/dsqrt((L1min+L1min+one)*(L4+L4+one))
-                                    l1cmin = L1min
-                                    l1cmax = L1max
-                                    RETURN
-                                 ENDIF
-                              ENDIF
-                           ENDIF
-                        ENDIF
-                     ENDIF
-                  ENDIF
-               ENDIF
-            ENDIF
-         ENDIF
+                                    ier = 0
+                                    sixcof(1) = (-one)**idint(l2+l3+l5+l6+eps)/dsqrt((l1min+l1min+one)*(l4+l4+one))
+                                    l1cmin = l1min
+                                    l1cmax = l1max
+                                    return
+                                 endif
+                              endif
+                           endif
+                        endif
+                     endif
+                  endif
+               endif
+            endif
+         endif
 !
 !
 !  this is reached if triangular condition not satisfied
 !  or if l2+l3+l5+l6 or l2+l4+l6 not integer
 !
-         Ier = -1
-         WRITE (9,99002) L2 , L3 , L4 , L5 , L6
-99002    FORMAT (///1x,'6j-coefficients',9x,'l1',2F7.1,4x,'do not satisfy triangular conditions or'/20x,3F7.1,4x,                  &
+         ier = -1
+         write (9,99002) l2 , l3 , l4 , l5 , l6
+99002    format (///1x,'6j-coefficients',9x,'l1',2F7.1,4x,'do not satisfy triangular conditions or'/20x,3F7.1,4x,                  &
                 &'l2+l3+l5+l6 or l2+l4+l6 not integer')
-         RETURN
-      CASE (2)
+         return
+      case (2)
          lstep = lstep + 1
          l1 = l1 + one
 !
          oldfac = newfac
-         a1 = (l1+L2+L3+one)*(l1-L2+L3)*(l1+L2-L3)*(-l1+L2+L3+one)
-         a2 = (l1+L5+L6+one)*(l1-L5+L6)*(l1+L5-L6)*(-l1+L5+L6+one)
+         a1 = (l1+l2+l3+one)*(l1-l2+l3)*(l1+l2-l3)*(-l1+l2+l3+one)
+         a2 = (l1+l5+l6+one)*(l1-l5+l6)*(l1+l5-l6)*(-l1+l5+l6+one)
          newfac = dsqrt(a1*a2)
 !
-         IF ( l1<one+eps ) THEN
+         if ( l1<one+eps ) then
 !
 !  if l1 = 1   (l1 - 1) has to be factored out of dv, hence
 !
-            c1 = -two*(L2*(L2+one)+L5*(L5+one)-L4*(L4+one))/newfac
-         ELSE
+            c1 = -two*(l2*(l2+one)+l5*(l5+one)-l4*(l4+one))/newfac
+         else
 !
-            dv = two*(L2*(L2+one)*L5*(L5+one)+L3*(L3+one)*L6*(L6+one)-l1*(l1-one)*L4*(L4+one))                                     &
-               & - (L2*(L2+one)+L3*(L3+one)-l1*(l1-one))*(L5*(L5+one)+L6*(L6+one)-l1*(l1-one))
+            dv = two*(l2*(l2+one)*l5*(l5+one)+l3*(l3+one)*l6*(l6+one)-l1*(l1-one)*l4*(l4+one))                                     &
+               & - (l2*(l2+one)+l3*(l3+one)-l1*(l1-one))*(l5*(l5+one)+l6*(l6+one)-l1*(l1-one))
 !
             denom = (l1-one)*newfac
 !
 !
-            IF ( lstep>2 ) c1old = dabs(c1)
+            if ( lstep>2 ) c1old = dabs(c1)
             c1 = -(l1+l1-one)*dv/denom
-         ENDIF
+         endif
 !
-         IF ( lstep>2 ) THEN
+         if ( lstep>2 ) then
 !
 !
             c2 = -l1*oldfac/denom
 !
 !  recursion to the next 6j - coefficient x
 !
-            x = c1*Sixcof(lstep-1) + c2*Sixcof(lstep-2)
-            Sixcof(lstep) = x
+            x = c1*sixcof(lstep-1) + c2*sixcof(lstep-2)
+            sixcof(lstep) = x
 !
             sumfor = sum1
             sum1 = sum1 + (l1+l1+one)*x*x
-            IF ( lstep/=nfin ) THEN
+            if ( lstep/=nfin ) then
 !
 !  see if last unnormalized 6j-coefficient exceeds srhuge
 !
-               IF ( dabs(x)>=srhuge ) THEN
+               if ( dabs(x)>=srhuge ) then
 !
 !  this is reached if last 6j-coefficient larger than srhuge
 !  so that the recursion series sixcof(1), ... ,sixcof(lstep)
 !  has to be rescaled to prevent overflow
 !
-                  Ier = Ier + 1
-                  DO i = 1 , lstep
-                     IF ( dabs(Sixcof(i))<srtiny ) Sixcof(i) = zero
-                     Sixcof(i) = Sixcof(i)/srhuge
-                  ENDDO
+                  ier = ier + 1
+                  do i = 1 , lstep
+                     if ( dabs(sixcof(i))<srtiny ) sixcof(i) = zero
+                     sixcof(i) = sixcof(i)/srhuge
+                  enddo
                   sum1 = sum1/huge
                   sumfor = sumfor/huge
                   x = x/srhuge
-               ENDIF
+               endif
 !
 !
 !  as long as the coefficient /c1/ is decreasing the recursion proceeds
@@ -2018,20 +2188,20 @@ SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
 !  once an increase of /c1/ is detected, the recursion direction is
 !  reversed.
 !
-               IF ( c1old>dabs(c1) ) THEN
-                  spag_nextblock_1 = 2
-                  CYCLE SPAG_DispatchLoop_1
-               ENDIF
-            ENDIF
+               if ( c1old>dabs(c1) ) then
+                  SPAG_NextBlock_1 = 2
+                  cycle spag_dispatchloop_1
+               endif
+            endif
 !
 !
 !  keep three 6j-coefficients around lmatch for comparision later
 !  with backward recursion.
 !
-            Lmatch = l1 - 1
+            lmatch = l1 - 1
             x1 = x
-            x2 = Sixcof(lstep-1)
-            x3 = Sixcof(lstep-2)
+            x2 = sixcof(lstep-1)
+            x3 = sixcof(lstep-2)
 !
 !
 !
@@ -2043,78 +2213,78 @@ SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
             nfinp2 = nfin + 2
             nfinp3 = nfin + 3
             nstep2 = nfin - lstep + 3
-            l1 = L1max
+            l1 = l1max
 !
-            Sixcof(nfin) = srtiny
+            sixcof(nfin) = srtiny
             sum2 = (l1+l1+one)*tiny
 !
 !
             l1 = l1 + two
             lstep = 1
-            SPAG_Loop_2_1: DO
+            spag_loop_2_1: do
                lstep = lstep + 1
                l1 = l1 - one
 !
                oldfac = newfac
-               a1s = (l1+L2+L3)*(l1-L2+L3-one)*(l1+L2-L3-one)*(-l1+L2+L3+two)
-               a2s = (l1+L5+L6)*(l1-L5+L6-one)*(l1+L5-L6-one)*(-l1+L5+L6+two)
+               a1s = (l1+l2+l3)*(l1-l2+l3-one)*(l1+l2-l3-one)*(-l1+l2+l3+two)
+               a2s = (l1+l5+l6)*(l1-l5+l6-one)*(l1+l5-l6-one)*(-l1+l5+l6+two)
                newfac = dsqrt(a1s*a2s)
 !
-               dv = two*(L2*(L2+one)*L5*(L5+one)+L3*(L3+one)*L6*(L6+one)-l1*(l1-one)*L4*(L4+one))                                  &
-                  & - (L2*(L2+one)+L3*(L3+one)-l1*(l1-one))*(L5*(L5+one)+L6*(L6+one)-l1*(l1-one))
+               dv = two*(l2*(l2+one)*l5*(l5+one)+l3*(l3+one)*l6*(l6+one)-l1*(l1-one)*l4*(l4+one))                                  &
+                  & - (l2*(l2+one)+l3*(l3+one)-l1*(l1-one))*(l5*(l5+one)+l6*(l6+one)-l1*(l1-one))
 !
                denom = l1*newfac
                c1 = -(l1+l1-one)*dv/denom
-               IF ( lstep>2 ) THEN
+               if ( lstep>2 ) then
 !
 !
                   c2 = -(l1-one)*oldfac/denom
 !
 !  recursion to the next 6j - coefficient y
 !
-                  y = c1*Sixcof(nfinp2-lstep) + c2*Sixcof(nfinp3-lstep)
-                  IF ( lstep==nstep2 ) EXIT SPAG_Loop_2_1
-                  Sixcof(nfinp1-lstep) = y
+                  y = c1*sixcof(nfinp2-lstep) + c2*sixcof(nfinp3-lstep)
+                  if ( lstep==nstep2 ) exit spag_loop_2_1
+                  sixcof(nfinp1-lstep) = y
                   sumbac = sum2
                   sum2 = sum2 + (l1+l1-three)*y*y
 !
 !  see if last unnormalized 6j-coefficient exceeds srhuge
 !
-                  IF ( dabs(y)>=srhuge ) THEN
+                  if ( dabs(y)>=srhuge ) then
 !
 !  this is reached if last 6j-coefficient larger than srhuge
 !  so that the recursion series sixcof(nfin), ... ,sixcof(nfin-lstep+1)
 !  has to be rescaled to prevent overflow
 !
-                     Ier = Ier + 1
-                     DO i = 1 , lstep
+                     ier = ier + 1
+                     do i = 1 , lstep
                         index = nfin - i + 1
-                        IF ( dabs(Sixcof(index))<srtiny ) Sixcof(index) = zero
-                        Sixcof(index) = Sixcof(index)/srhuge
-                     ENDDO
+                        if ( dabs(sixcof(index))<srtiny ) sixcof(index) = zero
+                        sixcof(index) = sixcof(index)/srhuge
+                     enddo
                      sumbac = sumbac/huge
 !
                      sum2 = sum2/huge
-                  ENDIF
-               ELSE
+                  endif
+               else
 !
 !  if l1 = l1max + 1 the third term in the recursion equation vanishes
 !
                   y = srtiny*c1
-                  Sixcof(nfin-1) = y
-                  IF ( lstep==nstep2 ) EXIT SPAG_Loop_2_1
+                  sixcof(nfin-1) = y
+                  if ( lstep==nstep2 ) exit spag_loop_2_1
                   sumbac = sum2
                   sum2 = sum2 + (l1+l1-three)*c1*c1*tiny
-               ENDIF
-            ENDDO SPAG_Loop_2_1
+               endif
+            enddo spag_loop_2_1
 !
 !
 !  the forward recursion 6j-coefficients x1, x2, x3 are to be matched
 !  with the corresponding backward recursion values y1, y2, y3.
 !
             y3 = y
-            y2 = Sixcof(nfinp2-lstep)
-            y1 = Sixcof(nfinp3-lstep)
+            y2 = sixcof(nfinp2-lstep)
+            y1 = sixcof(nfinp3-lstep)
 !
 !
 !  determine now ratio such that yi = ratio * xi  (i=1,2,3) holds
@@ -2123,63 +2293,63 @@ SUBROUTINE rec6j(Sixcof,L2,L3,L4,L5,L6,L1min,L1max,Lmatch,Ndim,Ier)
             ratio = (x1*y1+x2*y2+x3*y3)/(x1*x1+x2*x2+x3*x3)
             nlim = nfin - nstep2 + 1
 !
-            IF ( dabs(ratio)<one ) THEN
+            if ( dabs(ratio)<one ) then
 !
                nlim = nlim + 1
                ratio = one/ratio
-               DO n = nlim , nfin
-                  Sixcof(n) = ratio*Sixcof(n)
-               ENDDO
+               do n = nlim , nfin
+                  sixcof(n) = ratio*sixcof(n)
+               enddo
                sumuni = sumfor + ratio*ratio*sumbac
-            ELSE
+            else
 !
-               DO n = 1 , nlim
-                  Sixcof(n) = ratio*Sixcof(n)
-               ENDDO
+               do n = 1 , nlim
+                  sixcof(n) = ratio*sixcof(n)
+               enddo
                sumuni = ratio*ratio*sumfor + sumbac
-            ENDIF
-         ELSE
+            endif
+         else
 !
 !  if l1 = l1min + 1 the third term in recursion equation vanishes
 !
             x = srtiny*c1
-            Sixcof(2) = x
+            sixcof(2) = x
             sum1 = sum1 + tiny*(l1+l1+one)*c1*c1
 !
-            IF ( lstep/=nfin ) THEN
-               spag_nextblock_1 = 2
-               CYCLE SPAG_DispatchLoop_1
-            ENDIF
+            if ( lstep/=nfin ) then
+               SPAG_NextBlock_1 = 2
+               cycle spag_dispatchloop_1
+            endif
 !
             sumuni = sum1
-         ENDIF
+         endif
 !
 !
 !  normalize 6j-coefficients
 !
-         cnorm = one/dsqrt((L4+L4+one)*sumuni)
+         cnorm = one/dsqrt((l4+l4+one)*sumuni)
 !
 !  sign convention for last 6j-coeff. determines overall phase
 !
-         sign1 = dsign(one,Sixcof(nfin))
-         sign2 = (-one)**idint(L2+L3+L5+L6+eps)
-         IF ( sign1*sign2<=0 ) cnorm = -cnorm
+         sign1 = dsign(one,sixcof(nfin))
+         sign2 = (-one)**idint(l2+l3+l5+l6+eps)
+         if ( sign1*sign2<=0 ) cnorm = -cnorm
 !
-         IF ( dabs(cnorm)<one ) THEN
+         if ( dabs(cnorm)<one ) then
 !
             thresh = tiny/dabs(cnorm)
-            DO n = 1 , nfin
-               IF ( dabs(Sixcof(n))<thresh ) Sixcof(n) = zero
-               Sixcof(n) = cnorm*Sixcof(n)
-            ENDDO
-            EXIT SPAG_DispatchLoop_1
-         ENDIF
+            do n = 1 , nfin
+               if ( dabs(sixcof(n))<thresh ) sixcof(n) = zero
+               sixcof(n) = cnorm*sixcof(n)
+            enddo
+            exit spag_dispatchloop_1
+         endif
 !
-         DO n = 1 , nfin
-            Sixcof(n) = cnorm*Sixcof(n)
-         ENDDO
-         RETURN
-      END SELECT
-   ENDDO SPAG_DispatchLoop_1
+         do n = 1 , nfin
+            sixcof(n) = cnorm*sixcof(n)
+         enddo
+         return
+      end select
+   enddo spag_dispatchloop_1
 !
-END SUBROUTINE rec6j
+end subroutine REC6J

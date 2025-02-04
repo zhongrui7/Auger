@@ -2,13 +2,9 @@
 subroutine spAES(iprint,tsst,msst,mssq,tauq,mezz,mezj,gcor,fcor,ecor,szcor,kapcor,mm05cor,nkpcor,ikmcor,izero,itxray,bcor,bcors,     &
              & ncstmax)
 !   ********************************************************************
-!   *                                                                  *
 !   *       calculation of     aes  -  spectra                         *
-!   *                                                                  *
 !   ********************************************************************
-!   *                                                                  *
 !   * run ssite always for the  nl+1  angular momentum expansion       *
-!   *                                                                  *
 !   ********************************************************************
 !
    use mod_energy , only:etab , nemax , efermi
@@ -99,16 +95,9 @@ subroutine spAES(iprint,tsst,msst,mssq,tauq,mezz,mezj,gcor,fcor,ecor,szcor,kapco
 !
 !
 !*** start of declarations rewritten by spag
-!
 ! parameter definitions
-!
-!
 ! dummy arguments
-!
-!
 ! local variables
-!
-!
 !*** end of declarations rewritten by spag
 !
    integer :: spag_nextblock_1

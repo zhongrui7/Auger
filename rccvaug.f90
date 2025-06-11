@@ -1,616 +1,431 @@
-PROGRAM rccvaug
-!
-! calculate relativistic core-core-valence spectrum
-!     subroutines needed: ccvopen,synspec,broad
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a0 , bla , cfac , conv , decore , e0 , e1 , ef , em0 , fl , fl1 , fl2 , hwc , hws , hwv , pdos , phelp , pi , pmat ,     &
-        & pspect
-   REAL*8 ptot , shelp , stot , z
-   INTEGER i , j , k , krel , l , lmax , LMAX0 , maxd , maxm , mine1 , n1 , NE0 , NE1 , NEM0
-!*** End of declarations inserted by SPAG
-   PARAMETER (NE0=500,NE1=301,NEM0=71)
-   PARAMETER (LMAX0=3)
-!
-   CHARACTER*80 head
-   CHARACTER*1 name(10) , iddos(10) , idcore1(5) , idcore3(5)
-!
-   DIMENSION e0(NE0) , e1(NE1) , em0(NEM0)
-!
-   DIMENSION pdos(NE0,-LMAX0-1:LMAX0)
-   DIMENSION pspect(NE0,-LMAX0-1:LMAX0) , stot(NE0) , shelp(NE0)
-   DIMENSION ptot(NE1) , phelp(NE1)
-   DIMENSION pmat(NEM0,-LMAX0-1:LMAX0) , z(-LMAX0-1:LMAX0)
-   REAL*8 norm
-!
-   INTEGER dos , mat , tty , prt , plot
-!
-   DATA cfac/13.606E0/ , norm/0.0E0/
-   DATA pi/3.141596/
-!
-!     say hello....
-!
-   PRINT 99001
-   PRINT 99002
-99002 FORMAT ('           this is relativistic CCV Auger  ')
-   PRINT 99001
-!
-! open files
-!
-   CALL ccvopen(dos,mat,tty,prt,plot)
-!
-! enquiry.....
-!
-!   identifier
-!
-   READ (tty,99003) head
-99003 FORMAT (a80)
-   WRITE (plot,99004) head
-99004 FORMAT (1x,a80)
-!
-!   spectrometer resolution (fwhm in Ev)
-!
-   READ (tty,*) hws
-!
-!   halfwidth of lorentzian for valence band lifetime broadening
-!
-   READ (tty,*) hwv
-!
-!
-!   halfwidth of lorentzian for core-state lifetime broadening
-!
-   READ (tty,*) hwc
-!
-!   non-relativistic or relativistic densities of states  (0/1)
-!
-   READ (tty,*) krel
-!
-!
-! ***************  read in matrix elements  ***************
-!
-!   (energy is given in ryd)
-!
-! in relativistic case the ordering of kappa's in the dos file:
-!          -1   1  -2   2  -3   3  -4
-!                                          but in the mat file:
-!          -4  -3  -2  -1   1   2   3
-!
-!
-   READ (mat,*)
-   READ (mat,99005) (name(j),j=1,10)
-   READ (mat,*)
-   READ (mat,99005) (idcore1(j),j=1,5)
-   READ (mat,*)
-   READ (mat,99005) (idcore3(j),j=1,5)
-   READ (mat,*)
-   READ (mat,*) decore
-   READ (mat,*)
-   READ (mat,*) lmax
-   READ (mat,*)
-   READ (mat,*) a0
-   READ (mat,*)
-   READ (mat,*)
-!
-   conv = 2.*pi/a0
-   conv = conv*conv
-   IF ( krel==0 ) conv = 1.
-!
-   i = 0
-   DO
-      i = i + 1
-      READ (mat,*,END=100) em0(i) , (pmat(i,k),k=-lmax-1,-1) , (pmat(i,k),k=1,lmax)
-   ENDDO
- 100  maxm = i - 1
-!
-!
-! ***************  read in densities of states  ***************
-   READ (dos,99005) (iddos(j),j=1,10)
-   READ (dos,*)
-   READ (dos,*) ef
-   ef = conv*ef
-   READ (dos,*) lmax
-   READ (dos,*) maxd
-   READ (dos,*)
-!
-   DO i = 1 , maxd
-!
-      IF ( krel==0 ) THEN
-         READ (dos,*) e0(i) , (z(l),l=0,lmax) , bla
-         e0(i) = e0(i)*conv
-         pdos(i,-1) = z(0)
-         DO l = 1 , lmax
-            fl = dfloat(2*l+1)
-            fl = fl + fl
-            fl1 = dfloat(2*l)
-            fl2 = dfloat(2*l+2)
-            fl1 = fl1/fl
-            fl2 = fl2/fl
-            pdos(i,l) = z(l)*fl1
-            pdos(i,-l-1) = z(l)*fl2
-         ENDDO
-      ELSE
-         READ (dos,*) e0(i) , bla , pdos(i,-1) , (pdos(i,l),pdos(i,-l-1),l=1,lmax)
-         e0(i) = e0(i)*conv
-      ENDIF
-!
-   ENDDO
-!
-!
-! printout
-!
-   WRITE (prt,99007) (iddos(j),j=1,10) , (idcore1(j),j=1,5) , (idcore3(j),j=1,5) , decore , ef , hws , hwv , hwc
-99007 FORMAT (' Relativistic CCV Auger spectrum of ',10A1/'                   final core state ',                                  &
-             &5A1/'                 initial core state ',5A1/'                  transition energy ',f10.3,                         &
-             &' ryd'/'                       fermi-energy ',f10.3,' ryd'/'              spectrometer (fwhm) : ',f10.3,             &
-             &'  Ev'/'         valence life-time (fwhm) : ',f10.3,'  Ev'/'      core state life-time (fwhm) : ',f10.3,'  Ev'/)
-   WRITE (prt,99008)
-99008 FORMAT (/' Matrixelements'/)
-   DO i = 1 , maxm
-      WRITE (prt,99011) em0(i) , (pmat(i,k),k=-lmax-1,-1) , (pmat(i,k),k=1,lmax)
-   ENDDO
-   WRITE (prt,99009)
-99009 FORMAT (/' DOS'/)
-   DO i = 1 , maxd
-      WRITE (prt,99010) e0(i) , pdos(i,-1) , (pdos(i,l),pdos(i,-l-1),l=1,lmax)
-99010 FORMAT (10F11.5)
-   ENDDO
-!
-!
-! ******************  put together spectrum
-!
-   PRINT * , 'starting synspec'
-   CALL synspec(e0,pdos,NE0,maxd,pspect,stot,em0,pmat,NEM0,maxm,LMAX0,lmax,prt,1)
-!
-   WRITE (prt,*) '  total unbroadened spectrum'
-   DO i = 1 , maxd
-      WRITE (prt,99011) (e0(i)-ef)*cfac , stot(i)
-   ENDDO
-!
-! *****************************
-!
-!     convolute spectrum with lorentzian in order to
-!     account for many-body effects and gaussian
-!     spectrometer resolution
-!
-!
-   PRINT * , 'starting broad'
-   CALL broad(e0,stot,NE0,maxd,mine1,prt,hwc,hwv,hws,e1,ptot,phelp,NE1,ef,cfac,norm)
-!
-!
-! *********** broadening for partial spectra
-!
-!
-   DO k = -lmax - 1 , lmax
-      IF ( k/=0 ) THEN
-!
-         DO i = 1 , NE0
-            shelp(i) = pspect(i,k)
-         ENDDO
-         PRINT * , 'starting broad'
-         CALL broad(e0,shelp,NE0,maxd,mine1,prt,hwc,hwv,hws,e1,pspect(1,k),phelp,NE1,ef,cfac,norm)
-      ENDIF
-   ENDDO
-!
-!
-! ************** output
-!
-   n1 = NE1 - mine1 + 1
-   WRITE (plot,99006) (idcore1(j),j=1,5) , (idcore3(j),j=1,5) , decore*cfac
-99006 FORMAT (2x,5A1,2x,5A1/f15.5)
-   WRITE (plot,99013) (l,-l-1,l=1,lmax)
-99013 FORMAT (5x,'e',5x,4x,'Total',4x,5x,'-1',6x,6(5x,i2,6x))
-   DO i = mine1 , NE1
-      WRITE (plot,99011) e1(i) , ptot(i)/norm , pspect(i,-1)/norm , (pspect(i,l)/norm,pspect(i,-l-1)/norm,l=1,lmax)
-   ENDDO
-!
-   WRITE (plot,99014) (l,-l-1,l=1,lmax)
-99014 FORMAT (5x,'e',5x,4x,'Total',5x,'-1',2x,6(5x,i2,2x))
-   DO i = mine1 , NE1
-      WRITE (plot,99012) e1(i) , ptot(i) , pspect(i,-1) , (pspect(i,l),pspect(i,-l-1),l=1,lmax)
-99012 FORMAT (f11.5,8F9.3)
-   ENDDO
-!
-   STOP 'end rccvaug'
-!
-99001 FORMAT (' *****************************************************')
-99005 FORMAT (10A1)
-99011 FORMAT (f11.5,8E13.5)
-END PROGRAM rccvaug
+module constants
+  implicit none
+  integer, parameter :: dp = kind(1.0d0)
+  real(dp), parameter :: cfac = 13.606_dp
+  real(dp), parameter :: pi = 3.141596_dp
+  integer, parameter :: ne0 = 500, ne1 = 301, nem0 = 71
+  integer, parameter :: lmax0 = 3
+  integer, parameter :: ngc = 100
+end module constants
 
-!*==CCVOPEN.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE ccvopen(Dos,Mat,Tty,Prt,Plot)
-   IMPLICIT NONE
-!
-! query the user or the ctl file for a name to be used to
-! construct file names for the job, then open all the
-! required files.
-!
-   CHARACTER*40 name
-   INTEGER Dos , Mat , Tty , Prt , Plot
-!
-! initialize i/o units
-!
-   Dos = 1
-   Mat = 2
-   Prt = 3
-   Tty = 5
-   Plot = 7
-!
-   OPEN (UNIT=Tty,FILE='rccvaug.in')
-!
-!            dos file
-!
-   READ (Tty,99001) name
-   OPEN (UNIT=Dos,FILE=name)
-!
-!            matrix element file
-!
-   READ (Tty,99001) name
-   OPEN (UNIT=Mat,FILE=name)
-!
-!            printer file
-!
-   READ (Tty,99001) name
-   OPEN (UNIT=Prt,FILE=name)
-!
-!           spectrum file
-!
-   READ (Tty,99001) name
-   OPEN (UNIT=Plot,FILE=name)
-!
-99001 FORMAT (a40)
-END SUBROUTINE ccvopen
+module types
+  implicit none
+  type :: spectrum_data
+    real(8), allocatable :: e0(:), e1(:), em0(:)
+    real(8), allocatable :: pdos(:,:), pspect(:,:), stot(:), shelp(:)
+    real(8), allocatable :: ptot(:), phelp(:)
+    real(8), allocatable :: pmat(:,:), z(:)
+  end type spectrum_data
+end module types
 
-!*==SYNSPEC.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE synspec(E0,Pdos,Ne0,Maxd,Pspect,Stot,Em0,Pmat,Nem0,Maxm,Ldim,Lmax,Prt,Ipr)
-!
-!     put together xps-spectrum on dos mesh
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 E0 , Em0 , Pdos , Pmat , Pspect , Stot , sum , xmat , ylag
-   INTEGER i , iex , Ipr , iw , j , k , Ldim , Lmax , Maxd , Maxm , nc , Ne0 , Nem0
-!*** End of declarations inserted by SPAG
-!
-   DIMENSION E0(Ne0) , Em0(Nem0)
-!
-   DIMENSION Pdos(Ne0,-Ldim-1:Ldim)
-   DIMENSION Pspect(Ne0,-Ldim-1:Ldim) , Stot(Ne0)
-   DIMENSION Pmat(Nem0,-Ldim-1:Ldim)
-!
-   INTEGER Prt
-!
-   DO k = -Lmax - 1 , Lmax
-      IF ( k/=0 ) THEN
-         DO i = 1 , Maxd
-            xmat = ylag(E0(i),Em0,Pmat(1,k),0,3,Maxm,iex)
-            Pspect(i,k) = xmat*Pdos(i,k)
-         ENDDO
-      ENDIF
-   ENDDO
-!
-   IF ( Ipr>0 ) WRITE (Prt,99001)
-!
-99001 FORMAT (/' synspec: total unbroadened spectrum'//                                                                            &
-             &'   e     intensity      e     intensity                         e     intensity      e     intensity'/)
-   DO i = 1 , Maxd
-      sum = 0.E0
-      DO k = -Lmax - 1 , Lmax
-         IF ( k==0 ) THEN
-         ENDIF
-         sum = sum + Pspect(i,k)
-      ENDDO
-      Stot(i) = sum
-   ENDDO
-   IF ( Ipr<=0 ) RETURN
-   nc = 4
-   iw = Maxd/nc + 1
-   DO i = 1 , iw
-      k = nc*iw + i
-      IF ( k>Maxd ) k = Maxd
-      WRITE (Prt,99002) (E0(j),Stot(j),j=i,k,iw)
-99002 FORMAT (1x,4(0pf6.3,1pe12.4,3x))
-   ENDDO
-   RETURN
-!
-END SUBROUTINE synspec
-!
-!*==YLAG.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION ylag(Xi,X,Y,Ind1,N1,Imax,Iex)
-!
-!     program authors a.a.brooks and e.c.long,
-!     computing technology center, union carbide corp.,
-!     nuclear div., oak ridge, tenn.
-!
-!ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-!
-!     lagrangian interpolation
-!     xi is interpolated entry into x-array
-!     n is the order of lagrangian interpolation
-!     y is array from which ylag is obtained by interpolation
-!     ind is the min-i for x(i).gt.xi ==> if ind=0, x-array is searched
-!     imax is max index of x-and y-arrays
-!     extrapolation can occur ==> iex=-1 or +1
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 d , p , s , X , xd , Xi , Y
-   INTEGER i , Iex , Imax , ind , Ind1 , inl , inu , j , n , N1
-!*** End of declarations inserted by SPAG
-!
-   DIMENSION X(Imax) , Y(Imax)
-   ind = Ind1
-   n = N1
-   Iex = 0
-   IF ( n>Imax ) THEN
-      n = Imax
-      Iex = n
-   ENDIF
-   IF ( ind>0 ) THEN
-      CALL spag_block_2
-      RETURN
-   ENDIF
-   DO j = 1 , Imax
-      IF ( Xi<X(j) ) THEN
-         CALL spag_block_1
-         RETURN
-      ENDIF
-      IF ( Xi==X(j) ) THEN
-         CALL spag_block_6
-         RETURN
-      ENDIF
-   ENDDO
-   Iex = 1
-   CALL spag_block_3
-   RETURN
-!
-CONTAINS
-   SUBROUTINE spag_block_1
-      ind = j
-      CALL spag_block_2
-   END SUBROUTINE spag_block_1
- !
-   SUBROUTINE spag_block_2
-      IF ( ind<=1 ) Iex = -1
-      inl = ind - (n+1)/2
-      IF ( inl<=0 ) inl = 1
-      inu = inl + n - 1
-      IF ( inu<=Imax ) THEN
-         CALL spag_block_4
-         RETURN
-      ENDIF
-      CALL spag_block_3
-   END SUBROUTINE spag_block_2
-!
-   SUBROUTINE spag_block_3
-      inl = Imax - n + 1
-      inu = Imax
-      CALL spag_block_4
-   END SUBROUTINE spag_block_3
-!
-   SUBROUTINE spag_block_4
-      s = 0.D0
-      p = 1.D0
-      DO j = inl , inu
-         p = p*(Xi-X(j))
-         d = 1.D0
-         DO i = inl , inu
-            IF ( i/=j ) THEN
-               xd = X(j)
-            ELSE
-               xd = Xi
-            ENDIF
-            d = d*(xd-X(i))
-         ENDDO
-!      if(i.gt.55) write(6,*) i,j,d
-         s = s + Y(j)/d
-      ENDDO
-      ylag = s*p
-      CALL spag_block_5
-   END SUBROUTINE spag_block_4
-!   
-   SUBROUTINE spag_block_5
-      RETURN
-   END SUBROUTINE spag_block_5
-!   
-   SUBROUTINE spag_block_6
-      ylag = Y(j)
-      CALL spag_block_5
-      RETURN
-   END SUBROUTINE spag_block_6
-END FUNCTION ylag
-!
-!*==BROAD.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-SUBROUTINE broad(E0,A0,N0,Max,Mine1,Prt,Hwc,Hwv,Hws,E1,A1,Ai,N1,Ef,Cfac,Snorm)
-!
-!     interpolate to plot-grid and convolute with lorentzian
-!     (energy dependent halfwidth ) for life-time broadening
-!     and gaussian spectrometer resolution.
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A0 , A1 , afac , ah , Ai , bfac , Cfac , convgau , convlo , delta , delta2 , E0 , E1 , Ef , emin0 , estep , gam , gc ,   &
-        & Hwc , hwl
-   REAL*8 Hws , Hwv , pi , rate1 , smax , Snorm , xmin , ylag
-   INTEGER i , iex , ix0 , Max , Mine1 , N0 , N1 , NGC
-!*** End of declarations inserted by SPAG
-!
-   PARAMETER (NGC=100)
-!
-   DIMENSION E0(N0) , A0(N0) , E1(N1) , A1(N1) , Ai(N1)
-   DIMENSION gc(-NGC:NGC) , ah(-NGC:NGC)
-   SAVE emin0
-!
-   INTEGER Prt
-!
-   DATA xmin/ - 14.E0/ , estep/0.05E0/
-   DATA ix0/281/ , pi/3.141596/
-!
-   IF ( Snorm<=0.E0 ) THEN
-!
-!     set fermi energy equal to zero and convert from
-!     rydberg to ev
-!
-      DO i = 1 , Max
-         E0(i) = (E0(i)-Ef)*Cfac
-      ENDDO
-!
-!     set up plot-grid and determine min-energy
-!
-      DO i = 1 , N1
-         E1(i) = xmin + (i-1)*estep
-      ENDDO
-      SPAG_Loop_1_1: DO i = 1 , N1
-         IF ( A0(i)>0.E0 ) EXIT SPAG_Loop_1_1
-      ENDDO SPAG_Loop_1_1
-      emin0 = E0(i)
-      SPAG_Loop_1_2: DO i = 1 , N1
-         IF ( E1(i)>emin0 ) EXIT SPAG_Loop_1_2
-      ENDDO SPAG_Loop_1_2
-      Mine1 = i
-   ENDIF
-!
-!
-!     interpolate
-!
-   DO i = Mine1 , N1
-      Ai(i) = ylag(E1(i),E0,A0,0,3,Max,iex)
-   ENDDO
-   DO i = 1 , Mine1 - 1
-      Ai(i) = 0.0E0
-   ENDDO
-   DO i = ix0 + 1 , N1
-      Ai(i) = 0.E0
-   ENDDO
-!
-   DO i = Mine1 , N1
-!
-!     determine halfwidth for life-time broadening (core+core+valence)
-!
-!     valence band broadening decreases qudratically
-!     from hwl at the band bottom up to zero at the fermi energy
-!
-!     core state broadening is constant
-!
-      rate1 = E1(i)/E1(1)
-      gam = (hwl*rate1*rate1+Hwc+Hwc)/2.0
-      IF ( E1(i)>0.E0 ) gam = Hwc
-!
-!     convolute now
-!
-      A1(i) = convlo(gam,Ai,i,estep,Mine1,N1,pi)
-   ENDDO
-!
-!     overwrite unbroadened data in ai with life-time
-!     broadened spectrum
-!
-   DO i = Mine1 , N1
-      Ai(i) = A1(i)
-   ENDDO
-!
-!     set up gaussian convolution function
-!
-   afac = -dlog(0.5D0)/(Hws/2.0)**2
-   bfac = dsqrt(afac/pi)
-   DO i = -NGC , NGC
-      delta = i*estep
-      delta2 = delta*delta
-      gc(i) = dexp(-afac*delta2)*bfac
-   ENDDO
-!
-!     convolute now
-!
-   DO i = Mine1 , N1
-      A1(i) = convgau(Ai,i,gc,ah,estep,NGC,N1)
-   ENDDO
-!
-   IF ( Snorm<=0.E0 ) THEN
-!
-!     determine maximum and set equal to 100.
-!
-      smax = 0.E0
-      DO i = Mine1 , N1
-         IF ( A1(i)>smax ) smax = A1(i)
-      ENDDO
-      Snorm = 100./smax
-   ENDIF
-!
-!
-   DO i = Mine1 , N1
-      A1(i) = A1(i)*Snorm
-   ENDDO
-!
-END SUBROUTINE broad
-!
-!*==CONVLO.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION convlo(Gam,A1,Ind,Estep,Mine1,N1,Pi)
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A1 , atm , atp , Estep , Gam , Pi , sum
-   INTEGER i , Ind , Mine1 , N1
-!*** End of declarations inserted by SPAG
-!
-!     do the convolution integral by trapezoidal rule
-!
-   DIMENSION A1(N1)
-!
-   sum = 0.0
-   DO i = Mine1 , N1
-      atp = datan(Estep*((i-Ind)+0.5)/Gam)
-      atm = datan(Estep*((i-Ind)-0.5)/Gam)
-      sum = sum + A1(i)*(atp-atm)
-   ENDDO
-   convlo = sum/Pi
-END FUNCTION convlo
-!
-! *==CONVGAU.f90 processed by SPAG 8.02DA 11:10  3 Jan 2024
-DOUBLE PRECISION FUNCTION convgau(A1,Ind,Gc,Ah,Estep,Ngc,N1)
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A1 , Ah , Estep , Gc , sum
-   INTEGER i , imx , Ind , N1 , Ngc
-!*** End of declarations inserted by SPAG
-!
-!     do the convolution integral by trapezoidal rule
-!
-   DIMENSION A1(N1) , Gc(-Ngc:Ngc) , Ah(-Ngc:Ngc)
-!
-   DO i = -Ngc , Ngc
-      Ah(i) = 0.D0
-   ENDDO
-   DO i = 0 , Ngc
-      imx = Ind + i
-      IF ( imx>N1 ) THEN
-         CALL spag_block_1
-         RETURN
-      ENDIF
-      Ah(i) = A1(imx)*Gc(i)
-   ENDDO
-   CALL spag_block_1
-!
-CONTAINS
-   SUBROUTINE spag_block_1
-      DO i = -1 , -Ngc , -1
-         imx = Ind + i
-         IF ( imx<1 ) THEN
-            CALL spag_block_2
-            RETURN
-         ENDIF
-         Ah(i) = A1(imx)*Gc(i)
-      ENDDO
-      CALL spag_block_2
-   END SUBROUTINE spag_block_1
-!
-   SUBROUTINE spag_block_2
-      sum = 0.D0
-      DO i = -Ngc , Ngc
-         sum = sum + Ah(i)
-      ENDDO
-!
-      convgau = sum*Estep
-   END SUBROUTINE spag_block_2
-!
-END FUNCTION convgau
+program rccvaug
+  use constants
+  use types
+  use omp_lib
+  implicit none
+
+  character(len=80) :: head
+  character(len=1) :: name(10), iddos(10), idcore1(5), idcore3(5)
+  type(spectrum_data) :: spec
+  real(dp) :: hws, hwv, hwc, ef, decore, a0, conv, norm = 0.0_dp
+  integer :: krel, lmax, maxd, maxm, mine1, n1, ios
+  integer :: dos = 1, mat = 2, tty = 5, prt = 3, plot = 7
+  integer :: i, k, l
+
+  ! Allocate arrays
+  allocate(spec%e0(ne0), spec%e1(ne1), spec%em0(nem0))
+  allocate(spec%pdos(ne0,-lmax0-1:lmax0), spec%pspect(ne0,-lmax0-1:lmax0))
+  allocate(spec%stot(ne0), spec%shelp(ne0))
+  allocate(spec%ptot(ne1), spec%phelp(ne1))
+  allocate(spec%pmat(nem0,-lmax0-1:lmax0), spec%z(-lmax0-1:lmax0))
+
+  ! Print header
+  print '(/,a)', ' *****************************************************'
+  print '(a)',   '           this is relativistic CCV Auger  '
+  print '(a)',   ' *****************************************************'
+
+  ! Open files
+  call ccvopen(dos, mat, tty, prt, plot)
+
+  ! Read input
+  read(tty, '(a80)') head
+  write(plot, '(1x,a80)') head
+  read(tty, *) hws
+  read(tty, *) hwv
+  read(tty, *) hwc
+  read(tty, *) krel
+
+  ! Read matrix elements
+  read(mat, *)
+  read(mat, '(10a1)') name
+  read(mat, *)
+  read(mat, '(5a1)') idcore1
+  read(mat, *)
+  read(mat, '(5a1)') idcore3
+  read(mat, *)
+  read(mat, *) decore
+  read(mat, *)
+  read(mat, *) lmax
+  read(mat, *)
+  read(mat, *) a0
+  read(mat, *)
+
+  conv = 2.0_dp * pi / a0
+  conv = conv * conv
+  if (krel == 0) conv = 1.0_dp
+
+  ! Read matrix elements
+  maxm = 0
+  do
+    maxm = maxm + 1
+    read(mat, *, iostat=ios) spec%em0(maxm), &
+                           (spec%pmat(maxm,k), k=-lmax-1,-1), &
+                           (spec%pmat(maxm,k), k=1,lmax)
+    if (ios /= 0) exit
+  end do
+  maxm = maxm - 1
+
+  ! Read DOS
+  read(dos, '(10a1)') iddos
+  read(dos, *)
+  read(dos, *) ef
+  ef = conv * ef
+  read(dos, *) lmax
+  read(dos, *) maxd
+  read(dos, *)
+
+  ! Parallelized DOS reading
+  !$omp parallel do private(i, l, bla, fl, fl1, fl2)
+  do i = 1, maxd
+    if (krel == 0) then
+      read(dos, *) spec%e0(i), (spec%z(l), l=0,lmax), bla
+      spec%e0(i) = spec%e0(i) * conv
+      spec%pdos(i,-1) = spec%z(0)
+      do l = 1, lmax
+        fl = real(2*l+1, dp)
+        fl = fl + fl
+        fl1 = real(2*l, dp) / fl
+        fl2 = real(2*l+2, dp) / fl
+        spec%pdos(i,l) = spec%z(l) * fl1
+        spec%pd ш
+        spec%pdos(i,-l-1) = spec%z(l) * fl2
+      end do
+    else
+      read(dos, *) spec%e0(i), bla, spec%pdos(i,-1),  &
+                 (spec%pdos(i,l), spec%pdos(i,-l-1), l=1,lmax)
+      spec%e0(i) = spec%e0(i) * conv
+    end if
+  end do
+  !$omp end parallel do
+
+  ! Printout
+  write(prt, '(/,a,10a1,/,a,5a1,/,a,5a1,/,a,f10.3,a,/,a,f10.3,a,/,a,f10.3,a,/,a,f10.3,a,/,a,f10.3,a)') &
+    ' Relativistic CCV Auger spectrum of ', iddos, &
+    '                   final core state ', idcore1, &
+    '                 initial core state ', idcore3, &
+    '                  transition energy ', decore, ' ryd', &
+    '                       fermi-energy ', ef, ' ryd', &
+    '              spectrometer (fwhm) : ', hws, '  Ev', &
+    '         valence life-time (fwhm) : ', hwv, '  Ev', &
+    '      core state life-time (fwhm) : ', hwc, '  Ev'
+  write(prt, '(/,a)') ' Matrixelements'
+  do i = 1, maxm
+    write(prt, '(f11.5,8e13.5)') spec%em0(i), (spec%pmat(i,k), k=-lmax-1,-1), &
+                                (spec%pmat(i,k), k=1,lmax)
+  end do
+  write(prt, '(/,a)') ' DOS'
+  do i = 1, maxd
+    write(prt, '(10f11.5)') spec%e0(i), spec%pdos(i,-1), &
+                          (spec%pdos(i,l), spec%pdos(i,-l-1), l=1,lmax)
+  end do
+
+  ! Synspec
+  print *, 'starting synspec'
+  call synspec(spec%e0, spec%pdos, ne0, maxd, spec%pspect, spec%stot, &
+               spec%em0, spec%pmat, nem0, maxm, lmax0, lmax, prt, 1)
+
+  write(prt, '(/,a)') '  total unbroadened spectrum'
+  do i = 1, maxd
+    write(prt, '(f11.5,e13.5)') (spec%e0(i) - ef) * cfac, spec%stot(i)
+  end do
+
+  ! Broadening
+  print *, 'starting broad'
+  call broad(spec%e0, spec%stot, ne0, maxd, mine1, prt, hwc, hwv, hws, &
+             spec%e1, spec%ptot, spec%phelp, ne1, ef, cfac, norm)
+
+  ! Partial spectra broadening
+  !$omp parallel do private(i, k)
+  do k = -lmax-1, lmax
+    if (k == 0) cycle
+    spec%shelp(1:ne0) = spec%pspect(1:ne0,k)
+    print *, 'starting broad'
+    call broad(spec%e0, spec%shelp, ne0, maxd, mine1, prt, hwc, hwv, hws, &
+               spec%e1, spec%pspect(1:ne0,k), spec%phelp, ne1, ef, cfac, norm)
+  end do
+  !$omp end parallel do
+
+  ! Final output
+  n1 = ne1 - mine1 + 1
+  write(plot, '(2x,5a1,2x,5a1,/,f15.5)') idcore1, idcore3, decore*cfac
+  write(plot, '(5x,a,5x,a,4x,a,6(5x,i2,6x))') 'e', 'Total', '-1', (l,-l-1,l=1,lmax)
+  do i = mine1, ne1
+    write(plot, '(f11.5,8e13.5)') spec%e1(i), spec%ptot(i)/norm, spec%pspect(i,-1)/norm, &
+                                (spec%pspect(i,l)/norm, spec%pspect(i,-l-1)/norm, l=1,lmax)
+  end do
+  write(plot, '(5x,a,5x,a,5x,a,6(5x,i2,2x))') 'e', 'Total', '-1', (l,-l-1,l=1,lmax)
+  do i = mine1, ne1
+    write(plot, '(f11.5,8f9.3)') spec%e1(i), spec%ptot(i), spec%pspect(i,-1), &
+                               (spec%pspect(i,l), spec%pspect(i,-l-1), l=1,lmax)
+  end do
+
+  ! Deallocate arrays
+  deallocate(spec%e0, spec%e1, spec%em0)
+  deallocate(spec%pdos, spec%pspect, spec%stot, spec%shelp)
+  deallocate(spec%ptot, spec%phelp, spec%pmat, spec%z)
+
+  stop 'end rccvaug'
+end program rccvaug
+
+subroutine ccvopen(dos, mat, tty, prt, plot)
+  implicit none
+  integer, intent(out) :: dos, mat, tty, prt, plot
+  character(len=40) :: name
+
+  dos = 1; mat = 2; prt = 3; tty = 5; plot = 7
+  open(unit=tty, file='rccvaug.in')
+  read(tty, '(a40)') name
+  open(unit=dos, file=trim(name))
+  read(tty, '(a40)') name
+  open(unit=mat, file=trim(name))
+  read(tty, '(a40)') name
+  open(unit=prt, file=trim(name))
+  read(tty, '(a40)') name
+  open(unit=plot, file=trim(name))
+end subroutine ccvopen
+
+subroutine synspec(e0, pdos, ne0, maxd, pspect, stot, em0, pmat, nem0, maxm, ldim, lmax, prt, ipr)
+  use constants
+  use omp_lib
+  implicit none
+  integer, intent(in) :: ne0, maxd, nem0, maxm, ldim, lmax, prt, ipr
+  real(dp), intent(in) :: e0(:), em0(:), pdos(:,:), pmat(:,:)
+  real(dp), intent(out) :: pspect(:,:), stot(:)
+  real(dp) :: xmat, sum
+  integer :: i, k, iex, j, nc, iw, k2
+
+  !$omp parallel do private(i, k, xmat)
+  do k = -lmax-1, lmax
+    if (k == 0) cycle
+    do i = 1, maxd
+      xmat = ylag(e0(i), em0, pmat(1:maxm,k), 0, 3, maxm, iex)
+      pspect(i,k) = xmat * pdos(i,k)
+    end do
+  end do
+  !$omp end parallel do
+
+  if (ipr > 0) write(prt, '(/,a,/,a)') &
+    ' synspec: total unbroadened spectrum', &
+    '   e     intensity      e     intensity      e     intensity      e     intensity'
+
+  !$omp parallel do private(i, sum)
+  do i = 1, maxd
+    sum = sum(pspect(i,-lmax-1:lmax), mask=(/(k,k=-lmax-1,lmax)/ /= 0))
+    stot(i) = sum
+  end do
+  !$omp end parallel do
+
+  if (ipr > 0) then
+    nc = 4
+    iw = maxd/nc + 1
+    do i = 1, iw
+      k = nc * iw + i
+      if (k > maxd) k = maxd
+      write(prt, '(1x,4(0pf6.3,1pe12.4,3x))') (e0(j), stot(j), j=i,k,iw)
+    end do
+  end if
+end subroutine synspec
+
+function ylag(xi, x, y, ind1, n1, imax, iex) result(res)
+  use constants
+  implicit none
+  real(dp) :: res
+  real(dp), intent(in) :: xi, x(:), y(:)
+  integer, intent(in) :: ind1, n1, imax
+  integer, intent(out) :: iex
+  integer :: ind, n, j, i, inl, inu
+  real(dp) :: s, p, d, xd
+
+  ind = ind1
+  n = n1
+  iex = 0
+  if (n > imax) then
+    n = imax
+    iex = n
+  end if
+  if (ind <= 0) then
+    do j = 1, imax
+      if (xi == x(j)) then
+        res = y(j)
+        return
+      else if (xi < x(j)) then
+        ind = j
+        exit
+      end if
+    end do
+    if (ind == 0) iex = 1
+  end if
+  if (ind <= 1) iex = -1
+  inl = ind - (n+1)/2
+  if (inl <= 0) inl = 1
+  inu = inl + n - 1
+  if (inu > imax) then
+    inl = imax - n + 1
+    inu = imax
+  end if
+  s = 0.0_dp
+  p = 1.0_dp
+  do j = inl, inu
+    p = p * (xi - x(j))
+    d = 1.0_dp
+    do i = inl, inu
+      if (i == j) then
+        xd = xi
+      else
+        xd = x(j)
+      end if
+      d = d * (xd - x(i))
+    end do
+    s = s + y(j) / d
+  end do
+  res = s * p
+end function ylag
+
+subroutine broad(e0, a0, n0, max, mine1, prt, hwc, hwv, hws, e1, a1, ai, n1, ef, cfac, snorm)
+  use constants
+  use omp_lib
+  implicit none
+  integer, intent(in) :: n0, max, prt, n1
+  integer, intent(out) :: mine1
+  real(dp), intent(in) :: e0(:), a0(:), hwc, hwv, hws, ef, cfac
+  real(dp), intent(inout) :: snorm
+  real(dp), intent(out) :: e1(:), a1(:), ai(:)
+  real(dp) :: gc(-ngc:ngc), ah(-ngc:ngc)
+  real(dp) :: emin0, xmin = -14.0_dp, estep = 0.05_dp
+  real(dp) :: rate1, gam, smax, afac, bfac, delta, delta2
+  integer :: ix0 = 281, i, iex
+
+  if (snorm <= 0.0_dp) then
+    !$omp parallel do
+    do i = 1, max
+      e0(i) = (e0(i) - ef) * cfac
+    end do
+    !$omp end parallel do
+
+    do i = 1, n1
+      e1(i) = xmin + (i-1) * estep
+    end do
+    do i = 1, n1
+      if (a0(i) > 0.0_dp) then
+        emin0 = e0(i)
+        exit
+      end if
+    end do
+    do i = 1, n1
+      if (e1(i) > emin0) then
+        mine1 = i
+        exit
+      end if
+    end do
+  end if
+
+  ! Interpolate
+  !$omp parallel do private(iex)
+  do i = mine1, n1
+    ai(i) = ylag(e1(i), e0, a0, 0, 3, max, iex)
+  end do
+  !$omp end parallel do
+  ai(1:mine1-1) = 0.0_dp
+  ai(ix0+1:n1) = 0.0_dp
+
+  ! Lifetime broadening
+  !$omp parallel do private(rate1, gam)
+  do i = mine1, n1
+    rate1 = e1(i) / e1(1)
+    gam = (hwv * rate1 * rate1 + hwc + hwc) / 2.0_dp
+    if (e1(i) > 0.0_dp) gam = hwc
+    a1(i) = convlo(gam, ai, i, estep, mine1, n1, pi)
+  end do
+  !$omp end parallel do
+
+  ai(mine1:n1) = a1(mine1:n1)
+
+  ! Gaussian convolution
+  afac = -log(0.5_dp) / (hws / 2.0_dp)**2
+  bfac = sqrt(afac / pi)
+  !$omp parallel do private(delta, delta2)
+  do i = -ngc, ngc
+    delta = i * estep
+    delta2 = delta * delta
+    gc(i) = exp(-afac * delta2) * bfac
+  end do
+  !$omp end parallel do
+
+  !$omp parallel do
+  do i = mine1, n1
+    a1(i) = convgau(ai, i, gc, ah, estep, ngc, n1)
+  end do
+  !$omp end parallel do
+
+  if (snorm <= 0.0_dp) then
+    smax = maxval(a1(mine1:n1))
+    snorm = 100.0_dp / smax
+  end if
+
+  !$omp parallel do
+  do i = mine1, n1
+    a1(i) = a1(i) * snorm
+  end do
+  !$omp end parallel do
+end subroutine broad
+
+function convlo(gam, a1, ind, estep, mine1, n1, pi) result(res)
+  use constants
+  implicit none
+  real(dp) :: res
+  real(dp), intent(in) :: gam, a1(:), estep, pi
+  integer, intent(in) :: ind, mine1, n1
+  real(dp) :: sum, atp, atm
+  integer :: i
+
+  sum = 0.0_dp
+  do i = mine1, n1
+    atp = atan(estep * ((i-ind) + 0.5_dp) / gam)
+    atm = atan(estep * ((i-ind) - 0.5_dp) / gam)
+    sum = sum + a1(i) * (atp - atm)
+  end do
+  res = sum / pi
+end function convlo
+
+function convgau(a1, ind, gc, ah, estep, ngc, n1) result(res)
+  use constants
+  implicit none
+  real(dp) :: res
+  real(dp), intent(in) :: a1(:), gc(-ngc:), estep
+  real(dp), intent(out) :: ah(-ngc:)
+  integer, intent(in) :: ind, ngc, n1
+  integer :: i, imx
+
+  ah(-ngc:ngc) = 0.0_dp
+  do i = 0, ngc
+    imx = ind + i
+    if (imx > n1) exit
+    ah(i) = a1(imx) * gc(i)
+  end do
+  do i = -1, -ngc, -1
+    imx = ind + i
+    if (imx < 1) exit
+    ah(i) = a1(imx) * gc(i)
+  end do
+  res = sum(ah(-ngc:ngc)) * estep
+end function convgau

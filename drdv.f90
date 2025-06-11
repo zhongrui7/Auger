@@ -1,105 +1,114 @@
-SUBROUTINE dvdr(R,Rv,Z,Nmt,R2dvdr)
-!     ===============
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 a , R , R2dvdr , r2v , Rv , Z
-   INTEGER i , NA , Nmt , NRAD
-!*** End of declarations inserted by SPAG
-!
-!     calculate derivative of the potential times r**2
-!     r**2*dv/dr=d(r**2*v)/dr-2.r*v
-!     finally override array rv with potential
-!
-!     j.redinger april 1985
-!
-   PARAMETER (NRAD=400)
-   PARAMETER (NA=NRAD*3)
-!
-   DIMENSION R(NRAD) , Rv(NRAD) , r2v(NRAD) , R2dvdr(NRAD) , a(NA)
-!
-   DO i = 1 , Nmt
-      r2v(i) = R(i)*Rv(i)
-   ENDDO
-!
-   CALL derspl(Nmt,R,r2v,R2dvdr,a)
-!
-   DO i = 1 , Nmt
-      R2dvdr(i) = R2dvdr(i) - 2.D0*Rv(i)
-      Rv(i) = Rv(i)/R(i)
-   ENDDO
-!
-   DO i = Nmt + 1 , NRAD
-      R2dvdr(i) = 0.D0
-   ENDDO
-END SUBROUTINE dvdr
-!
-!*==DERSPL.f90 processed by SPAG 8.02DA 00:54  4 Jan 2024
-SUBROUTINE derspl(N,X,F,D,A)
-!     =================
-!
-   IMPLICIT NONE
-!*** Start of declarations inserted by SPAG
-   REAL*8 A , D , F , h1 , h2 , p , X
-   INTEGER i , j , k , N
-!*** End of declarations inserted by SPAG
-!
-   DIMENSION X(N) , F(N) , D(N) , A(N)
-!
-!     f(i) are the function values at the points x(i) for i=1,n
-!     and the spline derivatives d(i) are found.
-!     the dimension of a must not be less than 3*n.
-!
-   DO i = 2 , N
-      IF ( X(i)<=X(i-1) ) THEN
-         WRITE (6,99001) i
-99001    FORMAT (' return from derspl  ',i3,' out of order')
-         A(1) = 1.D0
-         RETURN
-      ENDIF
-   ENDDO
-   DO i = 1 , N
-      j = 2
-      IF ( i/=1 ) THEN
-         j = N - 1
-         IF ( i/=N ) THEN
-            h1 = 1.D0/(X(i)-X(i-1))
-            h2 = 1.D0/(X(i+1)-X(i))
-            A(3*i-2) = h1
-            A(3*i-1) = 2.D0*(h1+h2)
-            A(3*i) = h2
-            D(i) = 3*(F(i+1)*h2*h2+F(i)*(h1*h1-h2*h2)-F(i-1)*h1*h1)
-            CYCLE
-         ENDIF
-      ENDIF
-      h1 = 1.D0/(X(j)-X(j-1))
-      h2 = 1.D0/(X(j+1)-X(j))
-      A(3*i-2) = h1*h1
-      A(3*i-1) = h1*h1 - h2*h2
-      A(3*i) = -h2*h2
-      D(i) = 2.D0*(F(j)*(h2*h2*h2+h1*h1*h1)-F(j+1)*h2*h2*h2-F(j-1)*h1*h1*h1)
-   ENDDO
-   p = A(4)/A(1)
-   A(5) = A(5) - p*A(2)
-   A(6) = A(6) - p*A(3)
-   D(2) = D(2) - p*D(1)
-   DO i = 3 , N
-      k = 3*i - 4
-      p = A(k+2)/A(k)
-      A(k+3) = A(k+3) - p*A(k+1)
-      D(i) = D(i) - p*D(i-1)
-      IF ( i==N-1 ) THEN
-         p = A(k+5)/A(k)
-         A(k+5) = A(k+6) - p*A(k+1)
-         A(k+6) = A(k+7)
-         D(N) = D(N) - p*D(N-2)
-      ENDIF
-   ENDDO
-   D(N) = D(N)/A(3*N-1)
-   DO i = 3 , N
-      j = N + 2 - i
-      D(j) = (D(j)-A(3*j)*D(j+1))/A(3*j-1)
-   ENDDO
-   D(1) = (D(1)-D(2)*A(2)-D(3)*A(3))/A(1)
-   A(1) = 0.D0
-END SUBROUTINE derspl
+module dvdr_constants
+  implicit none
+  integer, parameter :: dp = kind(1.0d0)
+  integer, parameter :: nrad = 400
+  integer, parameter :: na = nrad * 3
+end module dvdr_constants
+
+subroutine dvdr(r, rv, z, nmt, r2dvdr)
+  use dvdr_constants
+  implicit none
+  ! Dummy arguments
+  real(dp), intent(in) :: r(nrad), z
+  integer, intent(in) :: nmt
+  real(dp), intent(inout) :: rv(nrad)
+  real(dp), intent(out) :: r2dvdr(nrad)
+  ! Local variables
+  real(dp), allocatable :: r2v(:), a(:)
+  integer :: i, ia_err
+
+  ! Allocate arrays
+  allocate(r2v(nmt), a(na), stat=ia_err)
+  if (ia_err /= 0) stop 'dvdr: allocation failed'
+
+  ! Compute r2v = r * rv
+  do i = 1, nmt
+    r2v(i) = r(i) * rv(i)
+  end do
+
+  ! Calculate spline derivative
+  call derspl(nmt, r, r2v, r2dvdr, a)
+
+  ! Compute r2dvdr = d(r2v)/dr - 2*rv and update rv = rv/r
+  do i = 1, nmt
+    r2dvdr(i) = r2dvdr(i) - 2.0_dp * rv(i)
+    rv(i) = rv(i) / r(i)
+  end do
+
+  ! Zero out r2dvdr for i > nmt
+  r2dvdr(nmt+1:nrad) = 0.0_dp
+
+  ! Clean up
+  deallocate(r2v, a)
+end subroutine dvdr
+
+subroutine derspl(n, x, f, d, a)
+  use dvdr_constants
+  implicit none
+  ! Dummy arguments
+  integer, intent(in) :: n
+  real(dp), intent(in) :: x(n), f(n)
+  real(dp), intent(out) :: d(n)
+  real(dp), intent(inout) :: a(na)
+  ! Local variables
+  real(dp) :: h1, h2, p
+  integer :: i, j, k
+
+  ! Check for monotonicity
+  do i = 2, n
+    if (x(i) <= x(i-1)) then
+      write(6, '(a,i3,a)') 'return from derspl  ', i, ' out of order'
+      a(1) = 1.0_dp
+      return
+    end if
+  end do
+
+  ! Set up tridiagonal system
+  do i = 1, n
+    if (i == 1 .or. i == n) then
+      j = merge(2, n-1, i == 1)
+      h1 = 1.0_dp / (x(j) - x(j-1))
+      h2 = 1.0_dp / (x(j+1) - x(j))
+      a(3*i-2) = h1 * h1
+      a(3*i-1) = h1 * h1 - h2 * h2
+      a(3*i) = -h2 * h2
+      d(i) = 2.0_dp * (f(j) * (h2 * h2 * h2 + h1 * h1 * h1) - &
+                       f(j+1) * h2 * h2 * h2 - f(j-1) * h1 * h1 * h1)
+    else
+      h1 = 1.0_dp / (x(i) - x(i-1))
+      h2 = 1.0_dp / (x(i+1) - x(i))
+      a(3*i-2) = h1
+      a(3*i-1) = 2.0_dp * (h1 + h2)
+      a(3*i) = h2
+      d(i) = 3.0_dp * (f(i+1) * h2 * h2 + f(i) * (h1 * h1 - h2 * h2) - &
+                       f(i-1) * h1 * h1)
+    end if
+  end do
+
+  ! Forward elimination
+  p = a(4) / a(1)
+  a(5) = a(5) - p * a(2)
+  a(6) = a(6) - p * a(3)
+  d(2) = d(2) - p * d(1)
+  do i = 3, n
+    k = 3 * i - 4
+    p = a(k+2) / a(k)
+    a(k+3) = a(k+3) - p * a(k+1)
+    d(i) = d(i) - p * d(i-1)
+    if (i == n-1) then
+      p = a(k+5) / a(k)
+      a(k+5) = a(k+6) - p * a(k+1)
+      a(k+6) = a(k+7)
+      d(n) = d(n) - p * d(n-2)
+    end if
+  end do
+
+  ! Back substitution
+  d(n) = d(n) / a(3*n-1)
+  do i = 3, n
+    j = n + 2 - i
+    d(j) = (d(j) - a(3*j) * d(j+1)) / a(3*j-1)
+  end do
+  d(1) = (d(1) - d(2) * a(2) - d(3) * a(3)) / a(1)
+  a(1) = 0.0_dp
+end subroutine derspl

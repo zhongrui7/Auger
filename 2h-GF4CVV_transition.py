@@ -1,6 +1,6 @@
 ##################################################################
-## Program for the calculation of the correlated two holes ##
-## Green's function for a CVV Auger transition             ##
+## Program for the calculation of the correlated two-hole       ##
+## Green's function for a CVV Auger transition                  ##
 ##################################################################
 # Import of the modules needed for the computations and the GUI
 

@@ -21,12 +21,12 @@ import time
 import datetime
 from pprint import pprint
 # return_pairs() creates all the possible combinations of the k_x
-# and k_y values calcuted on the First Brillouin zone of the
+# and k_y values calculated on the First Brillouin zone of the
 # considered system or else of the CuO_2 planes.
 
 def return_pairs(seq):
   """
-  return_pairs(seq) -> Given a sequence return a generator which
+  return_pairs(seq) -> Given a sequence, return a generator which
   yields all the possible pairs, with repetitions.
   Example:
   >>> for item in return_pairs(xrange(2)): print item
@@ -39,7 +39,7 @@ def return_pairs(seq):
   for i in seq:
     for j in copy_of_seq:
       yield i, j
-  # theta() is simply the definition by means of logic operators of
+  # theta() is simply the definition using logic operators of
   # the Heavyside function.
 
 def theta(x):
@@ -63,11 +63,10 @@ return x
 
 def my_range(start, end, step):
 """
-my_range(start, end, step) yields values from start (included)
-to end incrementing by step. It is used for the omega vector:
-that is, the energies where the Green's function will be evaluated.
-It accepts any numeric values and not only integers like range and
-xrange.
+my_range(start, end, step) yields values starting from the start (inclusive)
+up to the end, incremented by step. It is used to generate the omega vector—that is,
+the set of energies at which the Green's function will be evaluated. 
+Unlike Python’s built-in range or xrange, it accepts any numeric values, not just integers.
 """
 value = start
   if step <= 0:
@@ -85,13 +84,13 @@ class GreenFunction(object):
   energies is a dict with 'ed' and 'ep' keys,
   hopping is a dict with 'tpd' and 'tpp' keys,
   coulomb_interactions is a dict with 'udd' and 'upp' keys,
-  fermi is the fermi energy of the system.
+  Fermi is the Fermi energy of the system.
   tpd is the Cu-O hopping term;
   tpp is the O-O hopping term;
-  ed is the 3d orbital binding energy
+  ed is the 3d orbital binding energy;
   Since the oxygen 2p binding energy, ep, has been
   set to zero, ed corresponds to the energy difference ed-ep
-  (we are in the hole picture);
+  (we are in the hole-picture);
   label is a description of the system.
   """
 
@@ -112,7 +111,7 @@ def __init__(self, precision, energies, hopping,
 def hh(self, kx,ky):
   # Definition of the system Hamiltonian, which has as variables
   # the components of the wave vector k in the xOy plane and
-  # as parameters tpd, tpp and ed. Here:
+  # as parameters tpd, tpp, and ed. Here:
   ed = self.ed
   ep = self.ep
   tpd = self.tpd
@@ -125,10 +124,10 @@ def compute(self, energy_range, interacting_green_function,
   timeit,output=None):
   """
   compute (energy_range, interacting_green_function, timeit,
-  output) -> It computes the correlated time ordered two
+  output) -> It computes the correlated time-ordered two
   particles Green function, passed via interacting_green_function.
   If timeit is True, it computes the time.
-  If output is an open file, it writes the results on it.
+  If output is an open file, it writes the results to it.
   """
   self.kdata = self.eigensystem() # eigensystem for all the
   # k vectors
@@ -156,7 +155,7 @@ def compute(self, energy_range, interacting_green_function,
 
 def eigensystem(self):
 """
-For each k vector in the brillouin zone, compute eigenvalues
+For each k vector in the Brillouin zone, compute eigenvalues
 and eigenvectors of the Hamiltonian.
 Returns a dictionary.
 """
@@ -184,13 +183,13 @@ for index in range(3):
   decimals=precision)}
 return diz
 # compute_g0(omega) evaluates a 3*3 matrix for each considered
-# (qx,qy) vector which represents the not correlated two holes
+# (qx,qy) vector which represents the non-correlated two holes
 # Green's function of the system as a function of the hole
 # binding energies omega.
 
 def compute_g0(self, omega):
   """ compute_g0(omega) evaluates a 3*3 matrix for each
-  (qx,qy) vector which represents the not correlated two
+  (qx,qy) vector that represents the non-correlated two
   holes Green's function of the system as a function of the
   hole binding energies omega.
   """
@@ -233,11 +232,11 @@ def compute_my_interacting(self, qresult):
 class ParameterSet(object):
   pass
 
-def cu_GreenInteracting(a,b,c,d,m,f, upp, udd):
+def Cu_GreenInteracting(a,b,c,d,m,f, upp, udd):
   """
-  cu_GreenInteracting(a,b,c,d,m,f, upp, udd) ->
+  Cu_GreenInteracting(a,b,c,d,m,f, upp, udd) ->
   Returns the element [0,0] of the interacting
-  two holes Green's function matrix.
+  two-holes Green's function matrix.
   Its arguments are respectively:
   a = g0[0,0], b = g0[0,1],c = g0[0,2],d = g0[1,1],m = g0[1,2],
   f = g0[2,2]
@@ -262,7 +261,7 @@ def o_GreenInteracting(a,b,c,d,m,f, upp, udd):
   """
   o_GreenInteracting(a,b,c,d,m,f, upp, udd) ->
   Returns the element [1,1] of the interacting
-  two holes Green's function matrix.
+  two-holes Green's function matrix.
   Its arguments are respectively:
   a = g0[0,0], b = g0[0,1],c = g0[0,2],d = g0[1,1],m = g0[1,2],
   f = g0[2,2]
@@ -290,7 +289,7 @@ L = 12 # L*L is the total number of k-vectors
 delta = 0.1 # broadening of the calculated lineshape. It is
 # equivalent to convolve the computed line shape
 # with a Lorentzian curve having an HWHM of delta
-green = {"Copper":cu_GreenInteracting, "Oxygen":o_GreenInteracting}
+green = {"Copper":Cu_GreenInteracting, "Oxygen":o_GreenInteracting}
 parameters = []
 first_set = ParameterSet()
 first_set.interacting = green["Copper"]

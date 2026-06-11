@@ -49,16 +49,16 @@ def cini_model(g02, U):
 # PARAMETERS
 # =========================================================
 
-ne = 1000               # number of energy points
-alpha = 1.0            # half bandwidth
-bandwidth = 2 * alpha
+ne = 100               # number of energy points
+alpha = 1.0             # half bandwidth
+bandwidth = 2 * alpha   
 
-eta = 0.002
-extraw = 2.0
+eta = 0.002   #! imaginary energy for evaluating Green functions
+extraw = 2.0  #! extra plotting range outside the extrema of d01, d02
 extra = int(extraw / (bandwidth / ne))
 
-de = bandwidth / ne
-estart = -alpha
+de = bandwidth / ne   #! energy increment from d01(1) to d01(2)
+estart = -alpha       #! energy corresponding to d01(1)
 
 # =========================================================
 # 1-hole DOS (square band)

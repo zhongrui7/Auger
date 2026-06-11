@@ -49,7 +49,7 @@ def cini_model(g02, U):
 # PARAMETERS
 # =========================================================
 
-ne = 100               # number of energy points
+ne = 1000               # number of energy points
 alpha = 1.0             # half bandwidth
 bandwidth = 2 * alpha   
 

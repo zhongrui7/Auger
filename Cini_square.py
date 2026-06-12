@@ -1,3 +1,10 @@
+# Simple program to perform the calculation of the two hole density
+# of states in the Cini-Sawaztky model, e.g., for the Auger spectrum.
+#!
+#! When applyied to a rectangular 1H-DOS, gives the results of [1] Fig.1.
+#!
+#! References:
+#! [1] M Cini, Solid State Communications 24, 681 (1997)
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -68,7 +75,7 @@ d01 = np.ones(ne) / bandwidth
 E1 = estart + np.arange(ne) * de
 
 # =========================================================
-# 2-hole DOS
+# ... From non-interacting 1H-DOS to non-interacting 2H-DOS: 2-hole DOS
 # =========================================================
 d02 = selfconvolute(d01, de)
 
@@ -77,6 +84,7 @@ E2 = 2 * estart + np.arange(len(d02)) * de
 # =========================================================
 # Green functions
 # =========================================================
+#... From non-interacting 1H-DOS to non-interacting 1H-Green function
 g01 = hilbert_transform(
     d01,
     eta,
@@ -87,7 +95,7 @@ g01 = hilbert_transform(
 
 Eg1 = estart - extra * de + np.arange(len(g01)) * de
 
-
+#... From non-interacting 2H-DOS to non-interacting 2H-Green function
 g02 = hilbert_transform(
     d02,
     eta,
@@ -100,7 +108,7 @@ Eg2 = 2 * estart - extra * de + np.arange(len(g02)) * de
 
 
 # =========================================================
-# Interacting spectrum
+# Interacting spectrum... From non-interacting 2H-Green function to the interacting one
 # =========================================================
 U_values = [0.0, 1.0, 1.8, 3.0]
 
@@ -116,7 +124,7 @@ for U in U_values:
 # PLOTS
 # =========================================================
 
-# ---------- input DOS ----------
+# ---------- input 1H DOS ----------
 plt.subplot(2, 2, 1) # 2 row, 2 columns, 1st subplot
 plt.plot(E1, d01)
 plt.xlabel("Energy")
@@ -132,7 +140,7 @@ plt.ylabel("2H DOS")
 plt.title("Non-interacting two-hole DOS")
 plt.grid()
 
-# ---------- Green function ----------
+# ----------2H Green function ----------
 plt.subplot(2, 2, 3) # 2 row, 2 columns, 3rd subplot
 plt.plot(Eg2, np.real(g02), label="Re G02")
 plt.plot(Eg2, np.imag(g02), label="Im G02")

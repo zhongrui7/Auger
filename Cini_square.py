@@ -1,5 +1,5 @@
 # Simple program to perform the calculation of the two hole density
-# of states in the Cini-Sawaztky model, e.g., for the Auger spectrum.
+# of states in the Cini-CVV model, e.g., for the Auger spectrum.
 #!
 #! When applyied to a rectangular 1H-DOS, gives the results of [1] Fig.1.
 #!

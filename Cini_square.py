@@ -55,7 +55,6 @@ def cini_model(g02, U):
 # =========================================================
 # PARAMETERS
 # =========================================================
-
 ne = 1000               # number of energy points
 alpha = 1.0             # half bandwidth
 bandwidth = 2 * alpha   
@@ -123,7 +122,6 @@ for U in U_values:
 # =========================================================
 # PLOTS
 # =========================================================
-
 # ---------- input 1H DOS ----------
 plt.subplot(2, 2, 1) # 2 row, 2 columns, 1st subplot
 plt.plot(E1, d01)

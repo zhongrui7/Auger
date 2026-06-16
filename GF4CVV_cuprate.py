@@ -240,11 +240,11 @@ def cu_green_interacting(
         + a*(m**2)*udd*upp**2
     )
 
-    term1 = c * (c*upp - c*d*upp**2 + b*m*upp**2) / denom_common
-    term2 = b * (b*upp - b*f*upp**2 + c*m*upp**2) / denom_common
-    term3 = a * (1 - d*upp - f*upp + d*f*upp**2 - m**2 * upp**2) / denom_common
+    term1 = c * (c*upp - c*d*upp**2 + b*m*upp**2) 
+    term2 = b * (b*upp - b*f*upp**2 + c*m*upp**2) 
+    term3 = a * (1 - d*upp - f*upp + d*f*upp**2 - m**2 * upp**2)
 
-    return term1 + term2 + term3
+    return (term1 + term2 + term3)  / denom_common
 
 
 def o_green_interacting(
@@ -264,11 +264,11 @@ def o_green_interacting(
         + a * m**2 * udd * upp**2
     )
 
-    term1 = d * (1 - a*udd - f*upp - c**2*udd*upp + a*f*udd*upp) / denom_common
-    term2 = m * (m*upp + b*c*udd*upp - a*m*udd*upp) / denom_common
-    term3 = b * (b*udd - b*f*udd*upp + c*m*udd*upp) / denom_common
+    term1 = d * (1 - a*udd - f*upp - c**2*udd*upp + a*f*udd*upp)
+    term2 = m * (m*upp + b*c*udd*upp - a*m*udd*upp) 
+    term3 = b * (b*udd - b*f*udd*upp + c*m*udd*upp)
 
-    return term1 + term2 + term3
+    return (term1 + term2 + term3) / denom_common
 
 
 # =============================================================================

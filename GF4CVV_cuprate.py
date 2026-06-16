@@ -39,7 +39,7 @@ def theta(x: float | NDArray) -> float | NDArray:
 
 
 def fold_to_brillouin_zone(x: float | NDArray) -> float | NDArray:
-    """Fold value into first Brillouin zone: [-π, π)."""
+    """Fold value into Cu Brillouin zone: [-π, π)."""
     x = np.asarray(x)
     return (x + np.pi) % (2 * np.pi) - np.pi
 
@@ -148,7 +148,7 @@ class GreenFunction:
 
         if timeit:
             elapsed = time.time() - start
-            print(f"\nJob done in {elapsed:.2f} seconds\n")
+            print(f"\nJob done in {elapsed:.2f} Os\n")
 
         # Extract imaginary part for spectral function
         datapoints = [val.imag / (-np.pi * self.L**2) for val in final_data]
@@ -200,7 +200,7 @@ class GreenFunction:
                         den = (omega - (q_eigvals[n] + k_eigvals[k_idx, m]) +
                                1j * delta) * self.L**2
 
-                        qsum[q_idx] += (outer * occ) / den
+                        qsum[q_idx] += (outer * occ)  / den
 
         return qsum
 
@@ -240,11 +240,11 @@ def cu_green_interacting(
         + a*(m**2)*udd*upp**2
     )
 
-    term1 = c * (c*upp - c*d*upp**2 + b*m*upp**2) 
+    term1 = c * (c*upp - c*d*upp**2 + b*m*upp**2)
     term2 = b * (b*upp - b*f*upp**2 + c*m*upp**2) 
-    term3 = a * (1 - d*upp - f*upp + d*f*upp**2 - m**2 * upp**2)
+    term3 = a * (1 - d*upp - f*upp + d*f*upp**2 - m**2 * upp**2) 
 
-    return (term1 + term2 + term3)  / denom_common
+    return (term1 + term2 + term3) / denom_common
 
 
 def o_green_interacting(
@@ -264,9 +264,9 @@ def o_green_interacting(
         + a * m**2 * udd * upp**2
     )
 
-    term1 = d * (1 - a*udd - f*upp - c**2*udd*upp + a*f*udd*upp)
+    term1 = d * (1 - a*udd - f*upp - c**2*udd*upp + a*f*udd*upp) 
     term2 = m * (m*upp + b*c*udd*upp - a*m*udd*upp) 
-    term3 = b * (b*udd - b*f*udd*upp + c*m*udd*upp)
+    term3 = b * (b*udd - b*f*udd*upp + c*m*udd*upp) 
 
     return (term1 + term2 + term3) / denom_common
 
@@ -292,32 +292,32 @@ if __name__ == "__main__":
     parameters = []
 
     # First set (Copper)
-    first_set = ParameterSet()
-    first_set.interacting = green_functions["Copper"]
-    first_set.hopping = {"tpd": 1.5, "tpp": 0.6}
-    first_set.energies = {
+    Cu_set = ParameterSet()
+    Cu_set.interacting = green_functions["Copper"]
+    Cu_set.hopping = {"tpd": 1.5, "tpp": 0.6}
+    Cu_set.energies = {
         "ed": -3.3 + (7.9 / 2) * 0.273922,
         "ep": (3.6 / 2) * 0.119984,
     }
-    first_set.coulomb = {"udd": 7.9, "upp": 3.6}
-    first_set.fermi = -5.2489
-    first_set.label = "Description of the first parameter set (Copper)."
-    first_set.outputname = "today_Copper_HFBLA_L12.dat"
-    parameters.append(first_set)
+    Cu_set.coulomb = {"udd": 7.9, "upp": 3.6}
+    Cu_set.fermi = -5.2489
+    Cu_set.label = "Description of the Cu parameter set (Copper)."
+    Cu_set.outputname = "today_Copper_HFBLA_L12.dat"
+    parameters.append(Cu_set)
 
     # Second set (Oxygen) - fixed missing definition from original
-    second_set = ParameterSet()
-    second_set.interacting = green_functions["Oxygen"]
-    second_set.hopping = {"tpd": 1.5, "tpp": 0.6}
-    second_set.energies = {
+    O_set = ParameterSet()
+    O_set.interacting = green_functions["Oxygen"]
+    O_set.hopping = {"tpd": 1.5, "tpp": 0.6}
+    O_set.energies = {
         "ed": -3.3 + (7.9 / 2) * 0.273922,
         "ep": (3.6 / 2) * 0.119984,
     }
-    second_set.coulomb = {"udd": 7.9, "upp": 3.6}
-    second_set.fermi = -5.2489
-    second_set.label = "Description of the second parameter set (Oxygen)."
-    second_set.outputname = "today_Oxygen_HFBLA_L12_nh08472.dat"
-    parameters.append(second_set)
+    O_set.coulomb = {"udd": 7.9, "upp": 3.6}
+    O_set.fermi = -5.2489
+    O_set.label = "Description of the O parameter set (Oxygen)."
+    O_set.outputname = "today_Oxygen_HFBLA_L12_nh08472.dat"
+    parameters.append(O_set)
 
     for param in parameters:
         nrg = list(my_range(-20.0, -10.0, 0.5))

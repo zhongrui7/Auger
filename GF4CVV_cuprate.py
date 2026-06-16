@@ -302,10 +302,10 @@ if __name__ == "__main__":
     Cu_set.coulomb = {"udd": 7.9, "upp": 3.6}
     Cu_set.fermi = -5.2489
     Cu_set.label = "Description of the Cu parameter set (Copper)."
-    Cu_set.outputname = "today_Copper_HFBLA_L12.dat"
+    Cu_set.outputname = "Copper_HFBLA_L12.dat"
     parameters.append(Cu_set)
 
-    # Second set (Oxygen) - fixed missing definition from original
+    # Second set (Oxygen) 
     O_set = ParameterSet()
     O_set.interacting = green_functions["Oxygen"]
     O_set.hopping = {"tpd": 1.5, "tpp": 0.6}
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     O_set.coulomb = {"udd": 7.9, "upp": 3.6}
     O_set.fermi = -5.2489
     O_set.label = "Description of the O parameter set (Oxygen)."
-    O_set.outputname = "today_Oxygen_HFBLA_L12_nh08472.dat"
+    O_set.outputname = "Oxygen_HFBLA_L12_nh08472.dat"
     parameters.append(O_set)
 
     for param in parameters:

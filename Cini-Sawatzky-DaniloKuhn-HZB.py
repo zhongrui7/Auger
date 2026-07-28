@@ -162,3 +162,32 @@ class CSModel:
                            fill_value=0)
 
         return interp1(x) + interp2(x)
+
+# Example
+import matplotlib.pyplot as plt
+
+# Load DOS
+xdos = np.loadtxt("dos_x.dat")
+ydos = np.loadtxt("dos_y.dat")
+
+model = CSModel(xdos, ydos)
+
+x = np.linspace(0,25,2000)
+
+params = [
+    3.5,      # U1
+    6.0,      # U2
+    1.0,      # FWHM1
+    1.3,      # FWHM2
+    1.0,      # intensity1
+    0.4,      # intensity2
+    0.0,      # shift1
+    3.5       # shift2
+]
+
+y = model.spectrum(x, params)
+
+plt.plot(x,y)
+plt.xlabel("Energy (eV)")
+plt.ylabel("Intensity")
+plt.show()

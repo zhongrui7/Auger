@@ -14,12 +14,9 @@ class CSModel:
     """
 
     def __init__(self, xdos, ydos):
-
         self.xdos = np.asarray(xdos)
         self.ydos = np.asarray(ydos)
-
         self.dx = self.xdos[1] - self.xdos[0]
-
         self.initialize()
 
     ###########################################################
@@ -27,7 +24,6 @@ class CSModel:
     ###########################################################
 
     def initialize(self):
-
         # normalize DOS
         self.ydos = self.ydos / np.sum(self.ydos * self.dx)
 
@@ -40,37 +36,28 @@ class CSModel:
 
         # Hilbert transform
         analytic = hilbert(sc)
-
         self.ySCDOS = sc
         self.yHil = -np.pi * np.imag(analytic)
 
     ###########################################################
     # Gaussian
     ###########################################################
-
     @staticmethod
     def gaussian(x, mu, sigma):
-
         return np.exp(-(x-mu)**2/(2*sigma**2)) \
                /(np.sqrt(2*np.pi)*sigma)
 
     ###########################################################
     # Gaussian convolution
     ###########################################################
-
     def gaussconv(self, y, fwhm):
-
         if fwhm <= 0:
             return y.copy()
 
         sigma = fwhm / 2.355
-
         radius = int(np.ceil(6*sigma/self.dx))
-
         xx = np.arange(-radius, radius+1) * self.dx
-
         g = self.gaussian(xx, 0, sigma)
-
         g /= np.sum(g)
 
         return fftconvolve(y, g, mode="same")
@@ -78,13 +65,9 @@ class CSModel:
     ###########################################################
     # Find bound state
     ###########################################################
-
     def bound_state(self, U):
-
         f = 1 - U*self.yHil
-
         s = np.sign(f)
-
         idx = np.where(np.diff(s))[0]
 
         if len(idx)==0:
@@ -103,33 +86,23 @@ class CSModel:
     ###########################################################
     # Single CS peak
     ###########################################################
-
     def cs_peak(self,
                 U,
                 fwhm,
                 intensity):
-
         helper = 1 - U*self.yHil
-
         y = self.ySCDOS / (
                 helper**2
                 + (np.pi*U*self.ySCDOS)**2
         )
-
         integral = np.sum(y)*self.dx
-
         y = self.gaussconv(y, fwhm)
-
         y *= intensity
-
         Eb = self.bound_state(U)
 
         if Eb is not None:
-
             sigma = fwhm/2.355
-
             weight = intensity*(1-integral)
-
             y += weight*self.gaussian(
                 self.xdos,
                 Eb,
@@ -141,7 +114,6 @@ class CSModel:
     ###########################################################
     # Total model
     ###########################################################
-
     def spectrum(self,
                  x,
                  params):
@@ -169,7 +141,6 @@ import matplotlib.pyplot as plt
 # Load DOS
 xdos = np.loadtxt("dos_x.dat")
 ydos = np.loadtxt("dos_y.dat")
-
 model = CSModel(xdos, ydos)
 
 x = np.linspace(0,25,2000)

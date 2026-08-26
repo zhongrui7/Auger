@@ -44,7 +44,7 @@ def fold_to_brillouin_zone(x: float | NDArray) -> float | NDArray:
     return (x + np.pi) % (2 * np.pi) - np.pi
 
 
-def my_range(start: float, end: float, step: float) -> Generator[float, None, None]:
+def X_range(start: float, end: float, step: float) -> Generator[float, None, None]:
     """Float range generator (forward only)."""
     if step <= 0:
         raise ValueError("Step must be positive.")
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     parameters.append(O_set)
 
     for param in parameters:
-        nrg = list(my_range(-20.0, -10.0, 0.5))
+        nrg = list(X_range(-20.0, -10.0, 0.5))
 
         gf = GreenFunction(
             precision,

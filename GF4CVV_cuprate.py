@@ -25,7 +25,6 @@ from scipy.linalg import eigh  # More stable than eig for Hermitian
 # =============================================================================
 # Helper functions
 # =============================================================================
-
 def return_pairs(seq: list[float]) -> Generator[Tuple[float, float], None, None]:
     """Generate all pairs (i,j) with repetition from sequence."""
     for i in seq:
@@ -57,10 +56,9 @@ def X_range(start: float, end: float, step: float) -> Generator[float, None, Non
 # =============================================================================
 # Main classes
 # =============================================================================
-
 class GreenFunction:
     """
-    Computes correlated two-hole Green's function for CVV Auger transition.
+    Computes the correlated two-hole Green's function for CVV Auger transition.
     """
 
     def __init__(
@@ -91,7 +89,7 @@ class GreenFunction:
         self.kdata = self._compute_eigensystem()
 
     def _hamiltonian(self, kx: float, ky: float) -> NDArray:
-        """3x3 Hamiltonian matrix for given k-point."""
+        """ 3x3 Hamiltonian matrix for given k-point. """
         return np.array(
             [
                 [self.ed, 2 * self.tpd * np.cos(kx / 2), 2 * self.tpd * np.cos(ky / 2)],
@@ -110,7 +108,7 @@ class GreenFunction:
         )
 
     def _compute_eigensystem(self) -> Dict[int, Dict[int, Dict[str, Any]]]:
-        """Precompute eigenvalues and eigenvectors for all k-points."""
+        """ Precompute eigenvalues and eigenvectors for all k-points. """
         kdata = {}
         for idx, (kx, ky) in enumerate(return_pairs(self.brillouin)):
             H = self._hamiltonian(kx, ky)
@@ -131,7 +129,7 @@ class GreenFunction:
         timeit: bool = True,
         output: Any = None,
     ) -> None:
-        """Main computation loop."""
+        """ Main computation loop. """
         print(self.label)
         print("Job starting.")
 
@@ -161,7 +159,7 @@ class GreenFunction:
             output.close()
 
     def _compute_g0(self, omega: float, delta: float) -> Dict[int, NDArray]:
-        """Compute non-interacting two-hole Green's function for all q-points."""
+        """ Compute non-interacting two-hole Green's function for all q-points. """
         E_Fermi = self.fermi
         qsum: Dict[int, NDArray] = {}
 
@@ -207,7 +205,7 @@ class GreenFunction:
     def _compute_interacting(
         self, qresult: Dict[int, NDArray], interacting_gf: Callable
     ) -> complex:
-        """Sum interacting contributions over q-points."""
+        """ Sum interacting contributions over q-points. """
         total = 0.0 + 0j
         upp = self.upp
         udd = self.udd
@@ -223,13 +221,12 @@ class GreenFunction:
 # =============================================================================
 # Interacting Green's function formulas (cleaned)
 # =============================================================================
-
-def cu_green_interacting(
+def Cu_green_interacting(
     a: complex, b: complex, c: complex,
     d: complex, m: complex, f: complex,
     upp: float, udd: float
 ) -> complex:
-    """Interacting GF for Copper (element [0,0])."""
+    """ Interacting GF for Copper (element [0,0]). """
     denom_common = (
         1 - a*udd - d*upp - f*upp
         - (b**2)*udd*upp - (c**2)*udd*upp
@@ -247,12 +244,12 @@ def cu_green_interacting(
     return (term1 + term2 + term3) / denom_common
 
 
-def o_green_interacting(
+def O_green_interacting(
     a: complex, b: complex, c: complex,
     d: complex, m: complex, f: complex,
     upp: float, udd: float
 ) -> complex:
-    """Interacting GF for Oxygen (element [1,1])."""
+    """ Interacting GF for Oxygen (element [1,1]). """
     denom_common = (
         1 - a*udd - d*upp - f*upp
         - b**2 * udd*upp - c**2 * udd*upp
@@ -274,15 +271,14 @@ def o_green_interacting(
 # =============================================================================
 # Main execution
 # =============================================================================
-
 if __name__ == "__main__":
     precision = 5
     L = 12
     delta = 0.1  # Broadening
 
     green_functions = {
-        "Copper": cu_green_interacting,
-        "Oxygen": o_green_interacting,
+        "Copper": Cu_green_interacting,
+        "Oxygen": O_green_interacting,
     }
 
     # Parameter sets

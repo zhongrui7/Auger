@@ -3,12 +3,9 @@ from scipy.signal import fftconvolve, hilbert
 from scipy.interpolate import interp1d
 from scipy.optimize import brentq
 
-
 class CSModel:
     """
-    Cini-Sawatzky line shape model
-
-    Ported from Igor Pro
+    Cini-Sawatzky line shape model Ported from Igor Pro
     Danilo Kühn (HZB)
     Python conversion
     """
@@ -22,7 +19,6 @@ class CSModel:
     ###########################################################
     # Initialization
     ###########################################################
-
     def initialize(self):
         # normalize DOS
         self.ydos = self.ydos / np.sum(self.ydos * self.dx)
@@ -84,7 +80,7 @@ class CSModel:
         )
 
     ###########################################################
-    # Single CS peak
+    # Single Cini-Sawatzky peak
     ###########################################################
     def cs_peak(self,
                 U,
@@ -139,8 +135,11 @@ class CSModel:
 import matplotlib.pyplot as plt
 
 # Load DOS
-xdos = np.loadtxt("dos_x.dat")
-ydos = np.loadtxt("dos_y.dat")
+#xdos = np.loadtxt("dos_x.dat")
+#ydos = np.loadtxt("dos_y.dat")
+# usecols specifies the 0-based index of columns to load
+# unpack=True splits the columns into separate variables
+xdos, ydos = np.loadtxt('data.txt', usecols=(0, 1), unpack=True)
 model = CSModel(xdos, ydos)
 
 x = np.linspace(0,25,2000)

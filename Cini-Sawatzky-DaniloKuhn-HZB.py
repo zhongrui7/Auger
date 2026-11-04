@@ -139,7 +139,7 @@ import matplotlib.pyplot as plt
 #ydos = np.loadtxt("dos_y.dat")
 # usecols specifies the 0-based index of columns to load
 # unpack=True splits the columns into separate variables
-xdos, ydos = np.loadtxt('data.txt', usecols=(0, 1), unpack=True)
+xdos, ydos = np.loadtxt('dos.txt', usecols=(0, 1), unpack=True)
 model = CSModel(xdos, ydos)
 
 x = np.linspace(0,25,2000)
